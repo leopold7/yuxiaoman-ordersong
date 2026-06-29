@@ -2,7 +2,7 @@ import { createEffect, createSignal } from "solid-js";
 import { loadJSON, saveJSON } from "@/infra/storage/kv";
 import type { DanmuPlatform } from "@/types/danmu";
 import type { Platform } from "@/types/song";
-    
+
 /**
  * 全局设置 store.
  *
@@ -52,7 +52,7 @@ const [danmuPlatform, setDanmuPlatform] = createSignal<DanmuPlatform>(loadJSON(K
 const [danmuMode, setDanmuMode] = createSignal<DanmuMode>(loadJSON(K.danmuMode, "room") as DanmuMode);
 const [roomId, setRoomId] = createSignal<string>(loadJSON(K.roomId, ""));
 const [anchorCode, setAnchorCode] = createSignal<string>(loadJSON(K.anchorCode, ""));
-const [biliAppId, setBiliAppId] = createSignal<number>(loadJSON(K.biliAppId, 1786669667669));
+const [biliAppId, setBiliAppId] = createSignal<number>(loadJSON(K.biliAppId, 0));
 // 统一音质档 (网易云/QQ 通用): standard / exhigh / lossless / hires.
 // 默认取最高, 非 VIP 时后端自动降级到可用档位.
 const [audioQuality, setAudioQuality] = createSignal<string>(loadJSON(K.audioQuality, "hires"));
@@ -127,7 +127,7 @@ export function reloadSettingsFromStorage(): void {
     setDanmuMode(loadJSON(K.danmuMode, "room") as DanmuMode);
     setRoomId(loadJSON(K.roomId, ""));
     setAnchorCode(loadJSON(K.anchorCode, ""));
-    setBiliAppId(loadJSON(K.biliAppId, 1786669667669));
+    setBiliAppId(loadJSON(K.biliAppId, 0));
     setAudioQuality(loadJSON(K.audioQuality, "hires"));
     setSongListId(loadJSON(K.songListId, "7294328248"));
     setSongListHistory(loadJSON(K.songListHistory, []));

@@ -1,24 +1,19 @@
 # =========================================
-# B站点歌插件 - 服务端配置
-# 项目分类：直播工具
-# 申请地址：https://open-live.bilibili.com/open-manage
+# B站点歌插件 - 服务端配置模板
+# 申请地址: https://open-live.bilibili.com/open-manage
 # =========================================
 
-# 项目密钥 ID（直播创作者服务中心 → 个人资料 页面获取）
-access_key_id: "rK4wWEPq9kDrezg1a89quk7V"
+# 项目密钥 ID (直播创作者服务中心 -> 个人资料 页面获取)
+access_key_id: ""
 
-# 项目密钥 Secret（与 access_key_id 配对，注意是 secret）
-access_key_secret: "WMt6FvD3Zxs2ybAhgYFOVTk74Ltfe8"
+# 项目密钥 Secret (与 access_key_id 配对)
+access_key_secret: ""
 
-# 项目 AppId（直播创作者服务中心 → 我的项目 → 创建项目后获取）
-# 项目分类必须选择"直播工具"
-bili_app_id: 1786669667669
+# 项目 AppId (直播创作者服务中心 -> 我的项目 -> 创建项目后获取)
+bili_app_id: 0
 
-# 服务监听地址（0.0.0.0 表示允许所有网络访问，127.0.0.1 仅本地访问）
+# 服务监听地址 (0.0.0.0 允许所有网络访问, 127.0.0.1 仅本地)
 web_server_host: "127.0.0.1"
 
-# 服务端口号（避开常用端口，桌面端默认 17777）
+# 服务端口号
 web_server_port: 17777
-
-# 兼容字段（旧版拼写错误的字段，仅用于平滑升级，新部署请使用上面的 access_key_secret）
-access_key_secred: ""
