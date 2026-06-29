@@ -1,0 +1,22 @@
+[package]
+name = "ordersong-app"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Tauri 桌面壳"
+
+[[bin]]
+name = "start"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { workspace = true }
+
+[dependencies]
+ordersong-core = { path = "../core" }
+ordersong-server = { path = "../server" }
+
+tauri = { workspace = true }
+tokio = { workspace = true }
+ureq = { workspace = true }

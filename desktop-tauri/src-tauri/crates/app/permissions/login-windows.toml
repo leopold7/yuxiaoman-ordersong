@@ -1,0 +1,14 @@
+[[permission]]
+identifier = "allow-login-windows"
+description = "允许调用应用自身的内嵌登录窗口 / B站直播中心窗口命令"
+commands.allow = [
+    "open_netease_login",
+    "read_netease_cookies",
+    "close_netease_login",
+    "open_qq_login",
+    "read_qq_cookies",
+    "close_qq_login",
+    "open_bili_live_settings",
+    "open_bili_qr_login",
+    "close_bili_live_settings",
+]

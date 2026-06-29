@@ -1,0 +1,16 @@
+[package]
+name = "ordersong-bili-web"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "B站直播间网页弹幕协议客户端（房间号模式）"
+
+[dependencies]
+ordersong-core = { path = "../core" }
+reqwest = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+md-5 = { workspace = true }
+hex = { workspace = true }
+thiserror = { workspace = true }

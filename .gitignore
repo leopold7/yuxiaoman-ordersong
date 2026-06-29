@@ -1,0 +1,41 @@
+# ---- 依赖 ----
+node_modules/
+**/node_modules/
+
+# ---- 构建产物 ----
+frontend/dist/
+desktop-tauri/dist-stub/
+# Rust workspace target
+desktop-tauri/src-tauri/target/
+# 桌面打包用的资源
+desktop-tauri/src-tauri/crates/app/resources/
+desktop-tauri/release/
+# Tauri 自动生成
+desktop-tauri/src-tauri/gen/schemas/
+
+# ---- 运行时配置与密钥 ----
+.env
+.env.*
+!.env.example
+# 用户运行时生成的真实配置
+/config/config.yaml
+
+# ---- 安装包 / 发布物 ----
+*.exe
+*.tgz
+*.zip
+*.ico
+
+# ---- 日志 ----
+*.log
+
+# ---- IDE / OS ----
+/.vscode/
+/.idea/
+.DS_Store
+Thumbs.db
+
+# ---- 杂项 ----
+*.tsbuildinfo
+下载.htm
+website/

@@ -1,0 +1,12 @@
+#!/bin/sh
+# 提交前格式预检: Rust 用 cargo fmt --check, 前端用 tsc 类型检查.
+
+set -e
+
+echo "[pre-commit] cargo fmt --check ..."
+cargo fmt --all --check --manifest-path desktop-tauri/src-tauri/Cargo.toml
+
+echo "[pre-commit] frontend typecheck ..."
+pnpm --filter ordersong-frontend typecheck
+
+echo "[pre-commit] 通过"

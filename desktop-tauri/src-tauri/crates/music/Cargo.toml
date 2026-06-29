@@ -1,0 +1,21 @@
+[package]
+name = "ordersong-music"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "网易云 weapi + QQ 音乐客户端"
+
+[dependencies]
+ordersong-core = { path = "../core" }
+reqwest = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+aes = { workspace = true }
+cbc = { workspace = true }
+base64 = { workspace = true }
+hex = { workspace = true }
+rsa = { workspace = true }
+rand = { workspace = true }
+thiserror = { workspace = true }
+async-trait = { workspace = true }

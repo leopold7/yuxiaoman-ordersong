@@ -1,0 +1,135 @@
+.panel {
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+.title { font-weight: 700; font-size: 15px; color: var(--text-0); }
+.count {
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 1px 9px;
+    border-radius: 20px;
+}
+.nextTop { border-radius: 20px; font-size: 12px; }
+
+.searchRow {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.searchRow input { flex: 1; }
+
+.btnLoading { display: inline-flex; align-items: center; gap: 6px; }
+.spinner {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.45);
+    border-top-color: #fff;
+    animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.list {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+    margin: 0 -6px;
+    padding: 0 6px;
+}
+.empty {
+    padding: 40px 20px;
+    color: var(--text-2);
+    text-align: center;
+    font-size: 13px;
+}
+
+.row {
+    display: grid;
+    grid-template-columns: 30px 1fr auto;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 10px;
+    margin-bottom: 4px;
+    animation: fadeInUp 0.2s ease;
+}
+.playing {
+    background: var(--accent-soft);
+    box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.idx {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-2);
+    font-variant-numeric: tabular-nums;
+}
+
+/* 正在播放的音波动画 */
+.eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 14px; }
+.eq i {
+    width: 3px;
+    background: var(--accent);
+    border-radius: 1px;
+    animation: eq 0.9s ease-in-out infinite;
+}
+.eq i:nth-child(1) { height: 6px; animation-delay: 0s; }
+.eq i:nth-child(2) { height: 12px; animation-delay: 0.25s; }
+.eq i:nth-child(3) { height: 8px; animation-delay: 0.5s; }
+@keyframes eq { 0%, 100% { transform: scaleY(0.4); } 50% { transform: scaleY(1); } }
+
+.main { min-width: 0; }
+.nameLine { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.sname {
+    color: var(--text-0);
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.subLine {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 3px;
+    font-size: 12px;
+}
+.artist { color: var(--text-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 45%; }
+.dotSep { color: var(--text-2); }
+.user { color: var(--text-2); }
+.priority { font-size: 10px; color: var(--accent); font-weight: 700; flex-shrink: 0; }
+
+.actions { display: flex; gap: 4px; justify-content: flex-end; }
+.actions button { padding: 3px 8px; font-size: 11px; border-radius: 6px; }
+
+.sourceBadge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 5px;
+    flex-shrink: 0;
+    background: var(--bg-3);
+    color: var(--text-1);
+}
+.sourceBadge.sc { background: var(--warn); color: #1a1f2c; }
+.sourceBadge.gift { background: var(--accent); color: #fff; }
+.sourceBadge.admin { background: var(--accent-2); color: #0a0c12; }
+.sourceBadge.danmu { background: rgba(124, 140, 255, 0.2); color: #aeb8ff; }
+.sourceBadge.idle { background: var(--bg-3); color: var(--text-2); }

@@ -1,0 +1,125 @@
+.app {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--bg-0);
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 18px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(18, 21, 31, 0.7);
+    backdrop-filter: blur(10px);
+}
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-weight: 700;
+    color: var(--text-0);
+    letter-spacing: 0.3px;
+}
+.logo {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    object-fit: cover;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+.brandName {
+    color: var(--text-0);
+}
+.brand small { color: var(--text-2); font-weight: 400; font-size: 11px; }
+.spacer { flex: 1; }
+
+.danmuBadge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-1);
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 11px;
+}
+.statusDot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-2);
+}
+.dotOk { background: var(--success); box-shadow: 0 0 8px var(--success); animation: pulse 1.6s infinite; }
+.dotWarn { background: var(--warn); box-shadow: 0 0 8px var(--warn); animation: pulse 1s infinite; }
+.dotErr { background: var(--error); box-shadow: 0 0 8px var(--error); }
+.dotIdle { background: var(--text-2); }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+.warnPill {
+    font-size: 12px;
+    color: var(--warn);
+    padding: 4px 12px;
+    border: 1px solid var(--warn);
+    border-radius: 20px;
+    background: rgba(247, 201, 72, 0.08);
+}
+
+.headerBtn {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 12px;
+}
+
+.body {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 12px;
+    padding: 12px;
+    flex: 1;
+    overflow: hidden;
+}
+.left {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+.right {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.full {
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 900px) {
+    .body { grid-template-columns: 1fr; }
+}
+
+.lyricsOnly {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    overflow: hidden;
+}
+
+.streamView {
+    height: 100%;
+    background: transparent;
+    overflow: hidden;
+}

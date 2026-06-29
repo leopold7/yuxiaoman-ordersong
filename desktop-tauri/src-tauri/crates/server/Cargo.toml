@@ -1,0 +1,29 @@
+[package]
+name = "ordersong-server"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "axum 后端装配"
+
+[dependencies]
+ordersong-core = { path = "../core" }
+ordersong-bili-open = { path = "../bili-open" }
+ordersong-bili-web = { path = "../bili-web" }
+ordersong-bili-passport = { path = "../bili-passport" }
+ordersong-music = { path = "../music" }
+
+tokio = { workspace = true }
+axum = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+hyper = { workspace = true }
+reqwest = { workspace = true }
+http = { workspace = true }
+
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+moka = { workspace = true }
+once_cell = { workspace = true }
+parking_lot = { workspace = true }

@@ -1,0 +1,135 @@
+.wrap {
+    height: 100%;
+    background: transparent;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7), 0 0 8px rgba(0, 0, 0, 0.4);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+.notice {
+    align-self: center;
+    color: #fff;
+    font-size: 17px;
+    font-weight: 700;
+    padding: 10px 22px;
+    border-radius: 24px;
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(8px);
+    animation: noticePop 0.35s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    border: 1.5px solid rgba(255, 255, 255, 0.18);
+}
+/* 点歌成功 → 翠绿（让主播 / 观众一眼区分 OK / 失败） */
+.noticeOk {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.96), rgba(16, 185, 129, 0.96));
+}
+/* 冷却 / 超限 / 已点上 → 暖橙 */
+.noticeWarn {
+    background: linear-gradient(135deg, rgba(255, 95, 162, 0.96), rgba(255, 138, 76, 0.96));
+}
+/* 系统消息 → 蓝色 */
+.noticeInfo {
+    background: linear-gradient(135deg, rgba(80, 144, 255, 0.96), rgba(95, 208, 255, 0.96));
+}
+@keyframes noticePop {
+    from { opacity: 0; transform: translateY(-12px) scale(0.9); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(0, 0, 0, 0.45);
+    border-radius: 10px;
+    padding: 10px 14px;
+    backdrop-filter: blur(6px);
+}
+.cover {
+    width: 60px;
+    height: 60px;
+    border-radius: 6px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+.coverImg { width: 100%; height: 100%; object-fit: cover; display: block; }
+.info { flex: 1; min-width: 0; }
+.title {
+    font-size: 18px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.meta {
+    font-size: 13px;
+    opacity: 0.9;
+    margin-top: 3px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.progressTrack {
+    height: 3px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    margin-top: 6px;
+    overflow: hidden;
+}
+.progressFill {
+    height: 100%;
+    background: #ff6dab;
+    transition: width 0.25s linear;
+}
+
+.lyricLine {
+    text-align: center;
+    font-size: 22px;
+    font-weight: 600;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.45);
+    border-radius: 10px;
+    min-height: 30px;
+    backdrop-filter: blur(6px);
+}
+.lyricNext {
+    text-align: center;
+    font-size: 14px;
+    opacity: 0.7;
+    margin-top: 4px;
+}
+.placeholder {
+    text-align: center;
+    opacity: 0.7;
+    font-size: 14px;
+}
+
+.queue {
+    background: rgba(0, 0, 0, 0.45);
+    border-radius: 10px;
+    padding: 10px 14px;
+    backdrop-filter: blur(6px);
+}
+.queueTitle {
+    font-size: 13px;
+    opacity: 0.8;
+    margin-bottom: 6px;
+}
+.queueRow {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    padding: 3px 0;
+}
+.queueRow b { color: #ffc4dc; font-weight: 600; }
+.queueRow .user { opacity: 0.75; font-size: 12px; margin-left: 8px; }

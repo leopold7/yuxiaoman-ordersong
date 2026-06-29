@@ -1,0 +1,77 @@
+.backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+.modal {
+    width: 100%;
+    max-width: 560px;
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    color: var(--text-0);
+    animation: pop 0.25s ease-out;
+}
+@keyframes pop {
+    from { transform: translateY(20px) scale(0.96); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.h1 {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.subtitle { font-size: 13px; color: var(--text-2); margin: 0 0 18px; line-height: 1.7; }
+
+.steps {
+    background: var(--bg-2);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: 16px 0;
+    font-size: 13px;
+    line-height: 1.9;
+    color: var(--text-1);
+}
+.steps b { color: var(--text-0); }
+.steps a { color: var(--accent-2); }
+
+.row {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+}
+.row input {
+    flex: 1;
+    font-family: monospace;
+    font-size: 14px;
+    padding: 8px 12px;
+}
+.row button { padding: 8px 16px; }
+
+.actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+    gap: 8px;
+}
+.skipBtn {
+    background: transparent;
+    border: 0;
+    color: var(--text-2);
+    font-size: 12px;
+    cursor: pointer;
+    padding: 6px 12px;
+}

@@ -1,0 +1,79 @@
+.box {
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    flex: 0 0 auto;
+    height: 160px;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+.scroll {
+    flex: 1;
+    overflow-y: hidden;
+    position: relative;
+}
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 50px 4px;
+    transition: transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.line {
+    color: var(--text-2);
+    text-align: center;
+    font-size: 14px;
+    line-height: 1.7;
+    transition: color 0.3s;
+}
+.active {
+    color: var(--text-0);
+    font-weight: 600;
+    font-size: 18px;
+}
+.empty {
+    text-align: center;
+    color: var(--text-2);
+    padding: 40px 0;
+}
+
+/* OBS / 歌词网页全屏模式：铺满整个视口、透明背景，当前行始终垂直居中 */
+.obsFull {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    flex: 1 1 auto;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+}
+.obsFull .list {
+    /* 上下各留半屏，配合 translateY 让 active 行落在屏幕正中 */
+    padding: calc(50vh - 32px) 0;
+    gap: 0;
+}
+.obsFull .line {
+    height: 64px;
+    line-height: 64px;
+    font-size: 30px;
+    color: var(--text-2);
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
+}
+.obsFull .active {
+    font-size: 46px;
+    font-weight: 700;
+    color: var(--text-0);
+}
+.obsFull .empty {
+    font-size: 34px;
+    padding: 0;
+    line-height: 100vh;
+}

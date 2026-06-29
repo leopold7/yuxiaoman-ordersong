@@ -1,0 +1,59 @@
+{
+    "$schema": "https://schema.tauri.app/config/2",
+    "productName": "鱼小曼点歌助手",
+    "version": "0.1.0-beta.1",
+    "identifier": "com.realman.yuxiaoman.ordersong",
+    "build": {
+        "devUrl": "http://127.0.0.1:17777/order/",
+        "frontendDist": "../../../dist-stub"
+    },
+    "app": {
+        "withGlobalTauri": false,
+        "windows": [
+            {
+                "label": "main",
+                "title": "鱼小曼点歌助手",
+                "width": 1280,
+                "height": 800,
+                "minWidth": 960,
+                "minHeight": 600,
+                "resizable": true,
+                "fullscreen": false,
+                "url": "http://127.0.0.1:17777/order/",
+                "visible": false
+            }
+        ],
+        "security": {
+            "csp": null
+        }
+    },
+    "bundle": {
+        "active": true,
+        "targets": ["nsis"],
+        "publisher": "RealMan",
+        "copyright": "Copyright (c) 2026 dmx-man",
+        "shortDescription": "鱼小曼点歌助手",
+        "longDescription": "鱼小曼点歌助手 是一款B 站弹幕点歌应用，支持观众发送弹幕实时点歌。",
+        "icon": [
+            "icons/icon.ico"
+        ],
+        "resources": [
+            "resources/**/*"
+        ],
+        "windows": {
+            "nsis": {
+                "displayLanguageSelector": false,
+                "installMode": "perMachine",
+                "languages": ["SimpChinese"],
+                "installerIcon": "icons/icon.ico",
+                "uninstallerIcon": "icons/icon.ico",
+                "headerImage": "icons/header.bmp",
+                "sidebarImage": "icons/sidebar.bmp"
+            },
+            "webviewInstallMode": {
+                "type": "embedBootstrapper"
+            }
+        }
+    },
+    "plugins": {}
+}

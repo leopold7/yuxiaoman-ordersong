@@ -1,0 +1,26 @@
+{
+  "name": "realman-yuxiaoman-ordersong",
+  "author": "RealMan",
+  "version": "0.1.0-beta.1",
+  "description": "鱼小曼点歌助手 - B站弹幕点歌（测试版 Beta）",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "desktop-tauri"
+  ],
+  "scripts": {
+    "prepare": "git config core.hooksPath .githooks || exit 0",
+    "dev:frontend": "pnpm --filter ordersong-frontend dev",
+    "dev:desktop": "pnpm --filter ordersong-desktop dev",
+    "build:frontend": "pnpm --filter ordersong-frontend build",
+    "build:rust": "cargo build --release --manifest-path desktop-tauri/src-tauri/Cargo.toml",
+    "bundle": "pnpm --filter ordersong-desktop bundle:res",
+    "installer": "pnpm --filter ordersong-desktop installer",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint --if-present",
+    "fmt:check": "cargo fmt --all --check --manifest-path desktop-tauri/src-tauri/Cargo.toml",
+    "precommit": "pnpm fmt:check && pnpm --filter ordersong-frontend typecheck"
+  },
+  "license": "MIT",
+  "packageManager": "pnpm@9.0.0"
+}
