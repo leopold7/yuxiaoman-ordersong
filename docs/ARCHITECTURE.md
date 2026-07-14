@@ -79,11 +79,13 @@ graph TD
 | infra | `infra/` | 副作用封装：AudioPlayer、弹幕 WebSocket 客户端、localStorage+AES、Tauri invoke |
 | services | `services/` | 应用编排：PlayerService / DanmuService / QueueService / MusicService / AuthService |
 | stores | `stores/` | Solid 信号 + 持久化（settings / session / queue / notice / stats / liveState） |
-| components / views | `components/`、`views/` | UI 与三类 OBS 浏览器源视图（stream / lyrics / list） |
+| components / views | `components/`、`views/` | UI 与四类 OBS 浏览器源视图（stream / lyrics / list / audio） |
 
 ## 跨进程播放同步
 
-主程序（`?view=full`）周期把播放快照 POST 到 `/live-state`；OBS 浏览器源（`?view=lyrics|stream|list`）周期 GET 并渲染，从而歌词/叠加层无需各自起播放器。
+主程序（`?view=full`）周期把播放快照 POST 到 `/live-state`；OBS 浏览器源（`?view=lyrics|stream|list|audio`）周期 GET 并渲染，从而歌词/叠加层无需各自起播放器。
+
+`audio` 视图额外拿快照里的 `nowUrl`（当前音频直链）在 CEF 里再播一次，OBS Browser Source 会作为独立音轨采到，绕开 Application Audio Capture 抓不到 WebView2 子进程的问题。与主程序进度漂移 >0.8s 时自动 seek 对齐。
 
 ## 跨客户端共享配置
 

@@ -82,6 +82,10 @@ pnpm build:frontend && pnpm installer
 - 直播叠加层（推荐，透明背景）：`http://127.0.0.1:17777/order/?view=stream`
 - 纯歌词：`http://127.0.0.1:17777/order/?view=lyrics`
 - 完整点歌列表：`http://127.0.0.1:17777/order/?view=list`
+- 音频源（OBS 采音专用）：`http://127.0.0.1:17777/order/?view=audio`
+
+> 音频源解决 Tauri/WebView2 应用在 OBS `Application Audio Capture` 里抓不到音频的问题：
+> 在 OBS 添加此浏览器源并勾选「通过 OBS 控制音频」，会得到一条独立音轨。使用后把主程序音量拉到 0，避免双份声音。
 
 ## 参与贡献
 
