@@ -249,7 +249,7 @@ export function App() {
                 <div class={styles.brand}>
                     <img class={styles.logo} src={`${import.meta.env.BASE_URL}logo.png`} alt="" />
                     <span class={styles.brandName}>鱼小曼点歌助手</span>
-                    <small>v0.1.0-beta</small>
+                    <small>v0.1.0-beta.2</small>
                 </div>
                 <DanmuBadge />
                 <Show when={needConfig()}>

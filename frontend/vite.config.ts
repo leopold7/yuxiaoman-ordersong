@@ -17,6 +17,7 @@ export default defineConfig({
     server: {
         host: "127.0.0.1",
         port: 5173,
+        strictPort: true,
         proxy: {
             "/order/bili-api": "http://127.0.0.1:17777",
             "/order/netease_api": "http://127.0.0.1:17777",

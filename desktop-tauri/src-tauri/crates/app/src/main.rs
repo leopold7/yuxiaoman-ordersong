@@ -15,6 +15,10 @@ use crate::logger::write_log;
 
 const WAIT_BACKEND_TIMEOUT: Duration = Duration::from_secs(15);
 
+/// dev 模式下 Vite dev server 监听端口 
+#[cfg(debug_assertions)]
+const VITE_DEV_PORT: u16 = 5173;
+
 fn main() {
     std::panic::set_hook(Box::new(|info| {
         write_log(&format!("PANIC: {}", info));
@@ -53,8 +57,14 @@ fn run_app() {
     let base = cfg.base_path.clone();
     let host = cfg.web_server_host.clone();
 
-    let main_url = format!("http://{}:{}{}/", host, port, base);
     let healthz_url = format!("http://{}:{}/healthz", host, port);
+
+    // dev 模式下 WebView 加载 Vite dev server
+    // 以获得前端 HMR；prod 模式下由 axum 从打包资源里直接提供前端
+    #[cfg(debug_assertions)]
+    let display_url = format!("http://{}:{}{}/", host, VITE_DEV_PORT, base);
+    #[cfg(not(debug_assertions))]
+    let display_url = format!("http://{}:{}{}/", host, port, base);
 
     let state = ordersong_server::new_state(cfg);
 
@@ -85,7 +95,7 @@ fn run_app() {
             // 等 backend 健康检查通过后再显示主窗口
             let handle = app.handle().clone();
             let healthz_url = healthz_url.clone();
-            let main_url = main_url.clone();
+            let display_url = display_url.clone();
             tauri::async_runtime::spawn(async move {
                 let start = Instant::now();
                 loop {
@@ -106,10 +116,10 @@ fn run_app() {
                     tokio::time::sleep(Duration::from_millis(150)).await;
                 }
                 if let Some(win) = handle.get_webview_window("main") {
-                    let _ = win.eval(format!("location.replace('{}')", main_url));
+                    let _ = win.eval(format!("location.replace('{}')", display_url));
                     let _ = win.show();
                     let _ = win.set_focus();
-                    write_log("window shown");
+                    write_log(&format!("window shown, url={}", display_url));
                 } else {
                     write_log("get_webview_window('main') 返回 None");
                 }

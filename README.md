@@ -46,12 +46,14 @@ pnpm install
 ### 开发运行
 
 ```bash
-# 1. 启动前端开发服务器（含到后端的代理）
-pnpm dev:frontend
-
-# 2. 另开一个终端，构建并运行桌面壳（内嵌后端）
+# 一条命令：Tauri 会通过 beforeDevCommand 自动拉起 Vite (127.0.0.1:5173)，
+# 编译并启动 Rust 桌面壳（内嵌 axum，监听 127.0.0.1:17777），
+# WebView 加载 Vite 提供的前端（HMR 可用），API 请求走 vite.config.ts 的 proxy 到 axum。
 pnpm dev:desktop
 ```
+
+> 只调前端（浏览器里看）？可以单独跑 `pnpm dev:frontend`，前提是另外有一个 axum 在
+> `127.0.0.1:17777` 上运行（否则 `/order/*-api` 代理会 502）。
 
 ### 生产构建（桌面安装包）
 
