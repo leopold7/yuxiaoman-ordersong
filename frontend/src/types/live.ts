@@ -28,6 +28,7 @@ export interface LiveStateSnapshot {
     playing: boolean;
     queue: { sname: string; sartist: string; uname: string; platform?: string }[];
     notice: { text: string; level?: "success" | "warn" | "info" } | null;
+    nowUrl?: string | null;
     /** 主程序写快照时的 wall-clock (ms) , 用于 overlay 端插值平滑进度 */
     t: number;
 }

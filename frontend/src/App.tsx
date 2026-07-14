@@ -6,6 +6,7 @@ import { LyricView } from "./components/LyricView/LyricView";
 import { SettingsPanel, goToSettingsTab } from "./components/SettingsPanel/SettingsPanel";
 import { StreamOverlay } from "./components/StreamOverlay/StreamOverlay";
 import { ListOverlay } from "./components/ListOverlay/ListOverlay";
+import { AudioBridge } from "./components/AudioBridge/AudioBridge";
 import { OnboardingModal } from "./components/OnboardingModal/OnboardingModal";
 import { BiliQrLogin } from "./components/BiliQrLogin/BiliQrLogin";
 import { startDanmu } from "./services/DanmuService";
@@ -28,6 +29,9 @@ import styles from "./App.module.css";
 function buildLiveSnapshot(): LiveStateSnapshot {
     const cur = queue.orderList()[0] ?? null;
     const n = liveNotice();
+    // audio.src 在 stop() 后被 removeAttribute 清空, 但拿到的字符串会被解析成当前页, 这里过滤掉
+    const rawSrc = audioPlayer.audio.src || "";
+    const nowUrl = rawSrc && rawSrc !== window.location.href ? rawSrc : null;
     return {
         now: cur
             ? {
@@ -51,6 +55,7 @@ function buildLiveSnapshot(): LiveStateSnapshot {
             platform: it.song.platform
         })),
         notice: n ? { text: n.text, level: n.level } : null,
+        nowUrl,
         t: Date.now()
     };
 }
@@ -133,7 +138,7 @@ export function App() {
     });
 
     onMount(async () => {
-        if (ENV.VIEW === "lyrics" || ENV.VIEW === "stream" || ENV.VIEW === "list") return;
+        if (ENV.VIEW === "lyrics" || ENV.VIEW === "stream" || ENV.VIEW === "list" || ENV.VIEW === "audio") return;
         await hydrateFromSharedConfig();
         reloadSettingsFromStorage();
         reloadSessionFromStorage();
@@ -188,6 +193,12 @@ export function App() {
                 <ListOverlay />
             </>
         );
+    }
+
+    if (ENV.VIEW === "audio") {
+        // 更高频轮询, 让换源 / 播停感知更及时
+        startLiveStatePoll(300);
+        return <AudioBridge />;
     }
 
     const hasCode = () => !!(ENV.ANCHOR_CODE || settings.anchorCode());

@@ -13,7 +13,7 @@ export const ENV = {
     QQ_API: params.get("qq_api") || "/qq-api",
     ANCHOR_CODE: (params.get("code") || params.get("CODE") || "").trim(),
     APP_ID: parseInt(params.get("app_id") || "0", 10) || 0,
-    VIEW: (params.get("view") || "full").toLowerCase() as "full" | "lyrics" | "stream" | "list" | "compact",
+    VIEW: (params.get("view") || "full").toLowerCase() as "full" | "lyrics" | "stream" | "list" | "audio" | "compact",
     DEBUG: params.get("debug") === "1"
 };
 

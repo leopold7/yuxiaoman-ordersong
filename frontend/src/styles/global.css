@@ -54,9 +54,20 @@ html, body {
     text-rendering: optimizeLegibility;
 }
 
+/* OBS 浏览器源: 让根节点透明
+
+html.overlay-view,
+body.overlay-view {
+    background: transparent !important;
+}
+
 #root {
     height: 100%;
     width: 100%;
+}
+html.overlay-view #root,
+body.overlay-view #root {
+    background: transparent !important;
 }
 
 button {

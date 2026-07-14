@@ -13,7 +13,7 @@ import type { DanmuPlatform } from "@/types";
 
 const OBS_BASE = "http://127.0.0.1:17777";
 
-function buildUrl(view: "stream" | "lyrics" | "list" | "full"): string {
+function buildUrl(view: "stream" | "lyrics" | "list" | "audio" | "full"): string {
     const params: string[] = [];
     if (ENV.ANCHOR_CODE) params.push(`code=${encodeURIComponent(ENV.ANCHOR_CODE)}`);
     if (view !== "full") params.push(`view=${view}`);
@@ -49,6 +49,12 @@ export function DanmuSection() {
             label: "完整点歌列表",
             desc: "全屏深色背景，含当前播放 + 进度条 + 完整排队列表，适合单独一块屏或直播间侧栏",
             url: () => buildUrl("list")
+        },
+        {
+            id: "audio",
+            label: "音频源（OBS 专用）",
+            desc: "添加后请把主程序的音量拉到 0，避免双份声音。",
+            url: () => buildUrl("audio")
         }
     ];
 
@@ -375,6 +381,9 @@ export function DanmuSection() {
                 }}>
                     <b>用法：</b>在 OBS 中"添加 → 浏览器源 → URL"，粘贴下面的链接。
                     建议"宽 480 高 360"、勾选"关闭源不可见时不再渲染"。叠加层模式背景透明，可直接覆盖到直播画面上。
+                    <br />
+                    <b style={{ color: "var(--accent-2)" }}>音频采集：</b>
+                    推荐用"音频源"这一条 URL 作浏览器源、并勾选"通过 OBS 控制音频"用了音频源以后把主程序音量拉到0。
                 </div>
                 {urls.map((u) => (
                     <div style={{ "margin-bottom": "10px" }}>
