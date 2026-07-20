@@ -93,6 +93,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 需要完整历史以生成提交对比
 
       - name: Read version
         id: version
@@ -156,13 +158,49 @@ jobs:
         if: steps.check.outputs.exists != 'true'
         run: pnpm --filter ordersong-desktop installer
 
+      # 中文 productName 在 CI(非中文代码页)下会被 NSIS 丢弃, 导致 exe 名变为 _x.x.x...
+      # 这里检测到下划线开头就补回「鱼小曼点歌助手」(用 Node 保证 Unicode 写入)
+      - name: Fix installer filename
+        if: steps.check.outputs.exists != 'true'
+        shell: bash
+        run: |
+          node -e "const fs=require('fs'),path=require('path');const dir='desktop-tauri/src-tauri/target/release/bundle/nsis';const f=fs.readdirSync(dir).find(x=>x.toLowerCase().endsWith('.exe'));if(f&&f.startsWith('_')){const nf='鱼小曼点歌助手'+f;fs.renameSync(path.join(dir,f),path.join(dir,nf));console.log('已重命名为 '+nf);}else{console.log('无需重命名: '+(f||'(无 exe)'));}"
+
       - name: Publish release
         if: steps.check.outputs.exists != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TAG="${{ steps.version.outputs.tag }}"
           EXE=$(ls desktop-tauri/src-tauri/target/release/bundle/nsis/*.exe | head -n1)
-          gh release create "${{ steps.version.outputs.tag }}" "$EXE" \
-            --title "v${{ steps.version.outputs.version }}" \
-            --generate-notes
+          REPO="${{ github.repository }}"
+
+          # 取上一个 release 的 tag, 用于与本次做提交对比
+          PREV=$(gh release list --limit 1 --json tagName --jq '.[0].tagName' 2>/dev/null || true)
+          if [ -n "$PREV" ]; then
+            git fetch origin "refs/tags/$PREV:refs/tags/$PREV" 2>/dev/null || true
+            RANGE="$PREV..HEAD"
+          else
+            RANGE="HEAD"
+          fi
+
+          {
+            echo "## RELEASE v$VERSION"
+            echo
+            if [ -n "$PREV" ]; then
+              echo "> 对比上一版本 \`$PREV\`"
+              echo
+              echo "完整对比: https://github.com/$REPO/compare/$PREV...$TAG"
+              echo
+            fi
+            echo "### 提交记录"
+            echo
+            git log "$RANGE" --no-merges --pretty=format:"- [\`%h\`](https://github.com/$REPO/commit/%H) %s — _%an_"
+            echo
+          } > release-notes.md
+
+          gh release create "$TAG" "$EXE" \
+            --title "v$VERSION" \
+            --notes-file release-notes.md
