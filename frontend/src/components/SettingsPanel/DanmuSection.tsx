@@ -22,6 +22,7 @@ function buildUrl(view: "stream" | "lyrics" | "list" | "audio" | "full"): string
         params.push(`showCard=${settings.obsShowSongCard() ? 1 : 0}`);
         params.push(`showLyrics=${settings.obsShowScrollLyrics() ? 1 : 0}`);
         params.push(`showNext=${settings.obsShowNextPreview() ? 1 : 0}`);
+        params.push(`showNotice=${settings.obsShowNotice() ? 1 : 0}`);
     }
     const q = params.length ? `?${params.join("&")}` : "";
     return `${OBS_BASE}/order/${q}`;

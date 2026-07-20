@@ -48,6 +48,7 @@ const K = {
     obsShowSongCard: "v3.obs.showSongCard",
     obsShowScrollLyrics: "v3.obs.showScrollLyrics",
     obsShowNextPreview: "v3.obs.showNextPreview",
+    obsShowNotice: "v3.obs.showNotice",
 };
 
 export type IdleSource = "playlist" | "favorite" | "popular";
@@ -91,6 +92,7 @@ const [volume, setVolume] = createSignal<number>(Math.max(0, Math.min(1, loadJSO
 const [obsShowSongCard, setObsShowSongCard] = createSignal<boolean>(loadJSON(K.obsShowSongCard, true));
 const [obsShowScrollLyrics, setObsShowScrollLyrics] = createSignal<boolean>(loadJSON(K.obsShowScrollLyrics, true));
 const [obsShowNextPreview, setObsShowNextPreview] = createSignal<boolean>(loadJSON(K.obsShowNextPreview, true));
+const [obsShowNotice, setObsShowNotice] = createSignal<boolean>(loadJSON(K.obsShowNotice, true));
 
 /** 非持久化: 是否正在捕获快捷键, 用于全局监听跳过识别, 避免自触发 */
 const [capturingShortcut, setCapturingShortcut] = createSignal<boolean>(false);
@@ -123,6 +125,7 @@ createEffect(() => saveJSON(K.volume, volume()));
 createEffect(() => saveJSON(K.obsShowSongCard, obsShowSongCard()));
 createEffect(() => saveJSON(K.obsShowScrollLyrics, obsShowScrollLyrics()));
 createEffect(() => saveJSON(K.obsShowNextPreview, obsShowNextPreview()));
+createEffect(() => saveJSON(K.obsShowNotice, obsShowNotice()));
 
 export const settings = {
     musicPlatform, setMusicPlatform,
@@ -153,6 +156,7 @@ export const settings = {
     obsShowSongCard, setObsShowSongCard,
     obsShowScrollLyrics, setObsShowScrollLyrics,
     obsShowNextPreview, setObsShowNextPreview,
+    obsShowNotice, setObsShowNotice,
     capturingShortcut, setCapturingShortcut,
 };
 
@@ -187,6 +191,7 @@ export function reloadSettingsFromStorage(): void {
     setObsShowSongCard(loadJSON(K.obsShowSongCard, true));
     setObsShowScrollLyrics(loadJSON(K.obsShowScrollLyrics, true));
     setObsShowNextPreview(loadJSON(K.obsShowNextPreview, true));
+    setObsShowNotice(loadJSON(K.obsShowNotice, true));
 }
 
 /** 追加一条空闲歌单历史 (按 platform+listId 去重, 上限 50 条) */

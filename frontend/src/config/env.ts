@@ -18,6 +18,7 @@ export const ENV = {
     SHOW_CARD: params.get("showCard") !== "0",
     SHOW_LYRICS: params.get("showLyrics") !== "0",
     SHOW_NEXT: params.get("showNext") !== "0",
+    SHOW_NOTICE: params.get("showNotice") !== "0",
     DEBUG: params.get("debug") === "1"
 };
 

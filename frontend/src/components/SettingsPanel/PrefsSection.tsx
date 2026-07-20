@@ -124,6 +124,18 @@ export function PrefsSection() {
                         />
                         <span />
                     </div>
+                    <div class={styles.row}>
+                        <label>显示点歌状态提示</label>
+                        <input
+                            type="checkbox"
+                            checked={settings.obsShowNotice()}
+                            onChange={(e) => {
+                                settings.setObsShowNotice(e.currentTarget.checked);
+                                pushToast("配置已修改，请重新在弹幕 tab 中复制地址", "info");
+                            }}
+                        />
+                        <span />
+                    </div>
                 </div>
             </div>
         </>

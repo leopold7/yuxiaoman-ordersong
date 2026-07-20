@@ -45,6 +45,7 @@ export const SHARED_KEYS: readonly string[] = [
     "v3.obs.showSongCard",
     "v3.obs.showScrollLyrics",
     "v3.obs.showNextPreview",
+    "v3.obs.showNotice",
     // 名单 / 历史
     "v3.userBlackList",
     "v3.songBlackList",

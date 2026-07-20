@@ -45,6 +45,7 @@ export function StreamOverlay() {
     return (
         <div class={styles.wrap}>
             {/* 面向观众的提示（点歌成功 / 冷却 / 超限等；B站不允许第三方发弹幕，只能叠加层提示） */}
+            <Show when={ENV.SHOW_NOTICE}>
             <Show when={liveState().notice}>
                 {(n) => (
                     <div class={`${styles.notice} ${
@@ -55,6 +56,7 @@ export function StreamOverlay() {
                         {n().text}
                     </div>
                 )}
+            </Show>
             </Show>
 
             {/* 当前播放卡 */}
