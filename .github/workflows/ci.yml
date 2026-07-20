@@ -14,11 +14,11 @@ jobs:
       - uses: pnpm/action-setup@v4
         with:
           version: 9
+          cache: true
 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: "pnpm"
 
       - name: Install
         run: pnpm install --no-frozen-lockfile
@@ -28,12 +28,6 @@ jobs:
 
       - name: Build frontend
         run: pnpm --filter ordersong-frontend build
-
-      - name: Upload frontend artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-dist
-          path: frontend/dist
 
   rust:
     runs-on: windows-latest
@@ -60,7 +54,7 @@ jobs:
         run: cargo fmt --check --manifest-path desktop-tauri/src-tauri/Cargo.toml
 
       - name: Clippy
-        run: cargo clippy --workspace --manifest-path desktop-tauri/src-tauri/Cargo.toml
+        run: cargo clippy --workspace --manifest-path desktop-tauri/src-tauri/Cargo.toml -- -D warnings
 
-      - name: Build workspace
-        run: cargo build --workspace --manifest-path desktop-tauri/src-tauri/Cargo.toml
+      - name: Check workspace
+        run: cargo check --workspace --manifest-path desktop-tauri/src-tauri/Cargo.toml
