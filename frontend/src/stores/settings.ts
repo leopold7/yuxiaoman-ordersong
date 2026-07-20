@@ -44,6 +44,10 @@ const K = {
     fadeDuration: "v3.fadeDuration",
     /** 主程序音量 (0~1), 默认 1, 重新打开时恢复 */
     volume: "v3.volume",
+    // OBS 浏览器源 - 直播叠加层显示开关 (默认全部开启)
+    obsShowSongCard: "v3.obs.showSongCard",
+    obsShowScrollLyrics: "v3.obs.showScrollLyrics",
+    obsShowNextPreview: "v3.obs.showNextPreview",
 };
 
 export type IdleSource = "playlist" | "favorite" | "popular";
@@ -83,6 +87,10 @@ const [shortcutPausePlay, setShortcutPausePlay] = createSignal<string>(loadJSON(
 const [fadeEnabled, setFadeEnabled] = createSignal<boolean>(loadJSON(K.fadeEnabled, false));
 const [fadeDuration, setFadeDuration] = createSignal<number>(loadJSON(K.fadeDuration, 1000));
 const [volume, setVolume] = createSignal<number>(Math.max(0, Math.min(1, loadJSON(K.volume, 1))));
+// OBS 浏览器源 - 直播叠加层显示开关, 默认全部开启
+const [obsShowSongCard, setObsShowSongCard] = createSignal<boolean>(loadJSON(K.obsShowSongCard, true));
+const [obsShowScrollLyrics, setObsShowScrollLyrics] = createSignal<boolean>(loadJSON(K.obsShowScrollLyrics, true));
+const [obsShowNextPreview, setObsShowNextPreview] = createSignal<boolean>(loadJSON(K.obsShowNextPreview, true));
 
 /** 非持久化: 是否正在捕获快捷键, 用于全局监听跳过识别, 避免自触发 */
 const [capturingShortcut, setCapturingShortcut] = createSignal<boolean>(false);
@@ -112,6 +120,9 @@ createEffect(() => saveJSON(K.shortcutPausePlay, shortcutPausePlay()));
 createEffect(() => saveJSON(K.fadeEnabled, fadeEnabled()));
 createEffect(() => saveJSON(K.fadeDuration, fadeDuration()));
 createEffect(() => saveJSON(K.volume, volume()));
+createEffect(() => saveJSON(K.obsShowSongCard, obsShowSongCard()));
+createEffect(() => saveJSON(K.obsShowScrollLyrics, obsShowScrollLyrics()));
+createEffect(() => saveJSON(K.obsShowNextPreview, obsShowNextPreview()));
 
 export const settings = {
     musicPlatform, setMusicPlatform,
@@ -139,6 +150,9 @@ export const settings = {
     fadeEnabled, setFadeEnabled,
     fadeDuration, setFadeDuration,
     volume, setVolume,
+    obsShowSongCard, setObsShowSongCard,
+    obsShowScrollLyrics, setObsShowScrollLyrics,
+    obsShowNextPreview, setObsShowNextPreview,
     capturingShortcut, setCapturingShortcut,
 };
 
@@ -170,6 +184,9 @@ export function reloadSettingsFromStorage(): void {
     setShortcutPausePlay(loadJSON(K.shortcutPausePlay, ""));
     setFadeEnabled(loadJSON(K.fadeEnabled, false));
     setFadeDuration(loadJSON(K.fadeDuration, 1000));
+    setObsShowSongCard(loadJSON(K.obsShowSongCard, true));
+    setObsShowScrollLyrics(loadJSON(K.obsShowScrollLyrics, true));
+    setObsShowNextPreview(loadJSON(K.obsShowNextPreview, true));
 }
 
 /** 追加一条空闲歌单历史 (按 platform+listId 去重, 上限 50 条) */

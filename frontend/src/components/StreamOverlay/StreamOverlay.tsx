@@ -1,5 +1,6 @@
 import { For, Show, createMemo } from "solid-js";
 import { liveState, smoothCurrentTime } from "@/stores/liveState";
+import { ENV } from "@/config/env";
 import styles from "./StreamOverlay.module.css";
 
 function fmt(sec: number): string {
@@ -57,6 +58,7 @@ export function StreamOverlay() {
             </Show>
 
             {/* 当前播放卡 */}
+            <Show when={ENV.SHOW_CARD}>
             <div class={styles.card}>
                 <div class={styles.cover}>
                     <Show when={now()?.coverUrl} fallback={<img class={styles.coverImg} src={fallbackLogo} alt="logo" />}>
@@ -88,8 +90,10 @@ export function StreamOverlay() {
                     </div>
                 </div>
             </div>
+            </Show>
 
             {/* 滚动歌词 */}
+            <Show when={ENV.SHOW_LYRICS}>
             <div>
                 <div class={styles.lyricLine}>
                     <Show when={activeLine()} fallback={<span class={styles.placeholder}>{liveState().lyricsLoading ? "歌词加载中…" : "♪ 纯音乐 ♪"}</span>}>
@@ -100,17 +104,20 @@ export function StreamOverlay() {
                     {(l) => <div class={styles.lyricNext}>{l().text}</div>}
                 </Show>
             </div>
+            </Show>
 
             {/* 下一首预告 */}
-            <Show when={upcoming().length > 0}>
+            <Show when={ENV.SHOW_NEXT && upcoming().length > 0}>
                 <div class={styles.queue}>
                     <div class={styles.queueTitle}>接下来 ({liveState().queue.length} 首在排)</div>
-                    <For each={upcoming()}>{(it) => (
-                        <div class={styles.queueRow}>
-                            <span><b>{it.sname}</b> - {it.sartist}</span>
-                            <span class={styles.user}>{it.uname}</span>
-                        </div>
-                    )}</For>
+                    <For each={upcoming()}>
+                        {(it) => (
+                            <div class={styles.queueRow}>
+                                <span><b>{it.sname}</b> - {it.sartist}</span>
+                                <span class={styles.user}>{it.uname}</span>
+                            </div>
+                        )}
+                    </For>
                 </div>
             </Show>
         </div>

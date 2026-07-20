@@ -1,6 +1,7 @@
 import { Show, createSignal, createEffect, onCleanup } from "solid-js";
 import { settings } from "@/stores/settings";
 import { formatCombo, formatComboDisplay } from "@/utils/hotkey";
+import { pushToast } from "@/utils/toast";
 import styles from "./SettingsPanel.module.css";
 
 export function PrefsSection() {
@@ -81,6 +82,49 @@ export function PrefsSection() {
                         <span>ms</span>
                     </div>
                 </Show>
+            </div>
+
+            <div class={styles.section}>
+                <h3>OBS 浏览器源设置</h3>
+                <div class={styles.subSection}>
+                    <h4>直播叠加层</h4>
+                    <div class={styles.row}>
+                        <label>显示歌曲卡</label>
+                        <input
+                            type="checkbox"
+                            checked={settings.obsShowSongCard()}
+                            onChange={(e) => {
+                                settings.setObsShowSongCard(e.currentTarget.checked);
+                                pushToast("配置已修改，请重新在弹幕 tab 中复制地址", "info");
+                            }}
+                        />
+                        <span />
+                    </div>
+                    <div class={styles.row}>
+                        <label>显示滚动歌词</label>
+                        <input
+                            type="checkbox"
+                            checked={settings.obsShowScrollLyrics()}
+                            onChange={(e) => {
+                                settings.setObsShowScrollLyrics(e.currentTarget.checked);
+                                pushToast("配置已修改，请重新在弹幕 tab 中复制地址", "info");
+                            }}
+                        />
+                        <span />
+                    </div>
+                    <div class={styles.row}>
+                        <label>显示下一首预告</label>
+                        <input
+                            type="checkbox"
+                            checked={settings.obsShowNextPreview()}
+                            onChange={(e) => {
+                                settings.setObsShowNextPreview(e.currentTarget.checked);
+                                pushToast("配置已修改，请重新在弹幕 tab 中复制地址", "info");
+                            }}
+                        />
+                        <span />
+                    </div>
+                </div>
             </div>
         </>
     );

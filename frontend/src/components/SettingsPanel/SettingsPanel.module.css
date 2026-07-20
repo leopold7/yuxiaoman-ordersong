@@ -204,6 +204,21 @@
 }
 .linkBtn:hover { color: var(--accent); background: var(--bg-2); }
 
+/* OBS 浏览器源 - 直播叠加层 子分组 */
+.subSection {
+    margin: 8px 0 4px;
+    padding: 10px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+.subSection h4 {
+    font-size: 12px;
+    color: var(--text-1);
+    margin: 0 0 8px;
+    font-weight: 600;
+}
+
 /* 浅色提示文案 */
 .hint {
     grid-column: 1 / -1;
