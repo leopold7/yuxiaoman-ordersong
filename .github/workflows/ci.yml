@@ -4,6 +4,10 @@ on:
   push:
     branches: [main, master]
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   frontend:
@@ -50,10 +54,91 @@ jobs:
             ${{ runner.os }}-cargo-
 
       - name: Format check
-        run: cargo fmt --check --manifest-path desktop-tauri/src-tauri/Cargo.toml
+        run: cargo fmt --all --check --manifest-path desktop-tauri/src-tauri/Cargo.toml
 
       - name: Clippy
         run: cargo clippy --workspace --manifest-path desktop-tauri/src-tauri/Cargo.toml -- -D warnings
 
       - name: Check workspace
         run: cargo check --workspace --manifest-path desktop-tauri/src-tauri/Cargo.toml
+
+  # 仅在 push / 手动触发到 main|master 时跑; 需先通过上面的 CI 校验.
+  # 若同版本 release 已存在则跳过构建.
+  release:
+    needs: [frontend, rust]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    concurrency:
+      group: release-${{ github.ref }}
+      cancel-in-progress: false
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read version
+        id: version
+        shell: bash
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Check if release exists
+        id: check
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::Release ${{ steps.version.outputs.tag }} already exists, skip build."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup pnpm
+        if: steps.check.outputs.exists != 'true'
+        uses: pnpm/action-setup@v4
+        with:
+          cache: true
+
+      - name: Setup Node.js
+        if: steps.check.outputs.exists != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Rust
+        if: steps.check.outputs.exists != 'true'
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        if: steps.check.outputs.exists != 'true'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            desktop-tauri/src-tauri/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('desktop-tauri/src-tauri/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Install JS deps
+        if: steps.check.outputs.exists != 'true'
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build x64 installer
+        if: steps.check.outputs.exists != 'true'
+        run: pnpm --filter ordersong-desktop installer
+
+      - name: Publish release
+        if: steps.check.outputs.exists != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          EXE=$(ls desktop-tauri/src-tauri/target/release/bundle/nsis/*.exe | head -n1)
+          gh release create "${{ steps.version.outputs.tag }}" "$EXE" \
+            --title "v${{ steps.version.outputs.version }}" \
+            --notes "自动构建版本 v${{ steps.version.outputs.version }}"
