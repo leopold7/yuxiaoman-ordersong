@@ -247,6 +247,15 @@ export function playFirstIfNeeded(): void {
     }
 }
 
+/**
+ * 暂停 / 播放切换的统一入口（底部按钮与全局快捷键共用）。
+ * 根据设置中的「淡入淡出」开关决定是否走淡入淡出过渡。
+ */
+export function togglePlayback(): void {
+    const fadeMs = settings.fadeEnabled() ? Math.max(0, settings.fadeDuration()) : 0;
+    audioPlayer.toggle(fadeMs);
+}
+
 function applyIdleList(songs: SongInfo[]): void {
     const list: OrderItem[] = shuffle(
         songs.map((song) => ({

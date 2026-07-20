@@ -3,6 +3,7 @@ import { statsStore } from "@/stores/stats";
 import { qqService } from "@/services/MusicService";
 import { pushToast } from "@/utils/toast";
 import { invoke, isTauri } from "@/infra/tauri/invoke";
+import { backupConfig, parseConfig, applyImportedConfig, pickConfigFileTauri } from "@/utils/configBackup";
 import styles from "./SettingsPanel.module.css";
 
 /**
@@ -69,6 +70,49 @@ async function factoryReset() {
     setTimeout(() => location.reload(), 600);
 }
 
+/** 解析并应用配置文本: 校验 -> 写本地 + 同步后端 -> 刷新. */
+async function doImport(text: string): Promise<void> {
+    if (!confirm("导入配置将覆盖当前本地设置（含登录 Cookie）。确定继续？")) return;
+    try {
+        const map = parseConfig(text);
+        const keys = Object.keys(map);
+        if (keys.length === 0) {
+            pushToast("文件中没有可导入的 v3.* 配置项", "error", 6000);
+            return;
+        }
+        const n = await applyImportedConfig(map);
+        pushToast(`已导入 ${n} 项配置，即将刷新…`, "success", 5000);
+        setTimeout(() => location.reload(), 600);
+    } catch (err) {
+        console.error("[import-config] 失败:", err);
+        pushToast("导入失败：文件格式不正确或不是有效的备份文件", "error", 6000);
+    }
+}
+
+/** Web 回退: 从隐藏 <input type=file> 读取文件内容后导入. */
+async function onFilePicked(e: Event): Promise<void> {
+    const input = e.currentTarget as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = ""; // 允许重复选择同一文件
+    if (!file) return;
+    const text = await file.text();
+    await doImport(text);
+}
+
+/** 点击“导入配置”: Tauri 下用原生“打开”对话框; 纯 Web 环境下用 <input type=file>. */
+async function onImportClick(): Promise<void> {
+    if (isTauri()) {
+        // 仅在 Tauri 环境用原生对话框; 取消/失败不回退 web 选择器(避免二次弹窗)
+        const text = await pickConfigFileTauri();
+        if (text === null) return;
+        await doImport(text);
+        return;
+    }
+    fileInput?.click();
+}
+
+let fileInput: HTMLInputElement | undefined;
+
 export function AboutSection() {
     return (
         <div class={`${styles.section} ${styles.about}`}>
@@ -100,6 +144,17 @@ export function AboutSection() {
             <div style={{ "margin-top": "16px", padding: "12px 14px", background: "var(--bg-2)", "border-radius": "var(--radius-sm)" }}>
                 <div style={{ "font-weight": 600, "margin-bottom": "8px" }}>数据维护</div>
                 <div style={{ display: "flex", "flex-direction": "column", gap: "6px" }}>
+                    <div style={{ display: "flex", gap: "6px" }}>
+                        <button onClick={backupConfig} style={{ flex: 1 }}>备份配置</button>
+                        <button onClick={onImportClick} style={{ flex: 1 }}>导入配置</button>
+                    </div>
+                    <input
+                        ref={(el) => (fileInput = el)}
+                        type="file"
+                        accept=".json,application/json"
+                        style={{ display: "none" }}
+                        onChange={onFilePicked}
+                    />
                     <button onClick={clearLoginOnly}>仅退出所有平台登录</button>
                     <button onClick={factoryReset} style={{ background: "var(--error)", color: "#fff", "border-color": "transparent" }}>
                         一键清空所有数据（恢复出厂）

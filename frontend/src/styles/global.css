@@ -114,9 +114,39 @@ textarea:focus {
     border-color: var(--accent);
     box-shadow: var(--glow);
 }
-input[type=checkbox], input[type=radio] {
+input[type=radio] {
     accent-color: var(--accent);
     cursor: pointer;
+}
+/* 自定义勾选框：暗/亮主题下对勾均为白色，未选中为透明描边，选中为 accent 填充 */
+input[type=checkbox] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    flex-shrink: 0;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 5px;
+    background: transparent;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.12s, border-color 0.12s;
+}
+input[type=checkbox]:checked {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+input[type=checkbox]:checked::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 45%;
+    width: 4px;
+    height: 8px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: translate(-50%, -50%) rotate(45deg);
 }
 input[type=checkbox]:focus, input[type=radio]:focus {
     outline: none;

@@ -36,6 +36,14 @@ const K = {
     enableSCBoost: "v3.enableSCBoost",
     showLyrics: "v3.showLyrics",
     theme: "v3.theme",
+    /** 暂停/播放 快捷键组合 (如 "Ctrl+Space"), 空串表示未设置 */
+    shortcutPausePlay: "v3.shortcutPausePlay",
+    /** 淡入淡出: 暂停/播放音频时是否走淡入淡出过渡, 默认关 */
+    fadeEnabled: "v3.fadeEnabled",
+    /** 淡入淡出时长(ms), 默认 1000 */
+    fadeDuration: "v3.fadeDuration",
+    /** 主程序音量 (0~1), 默认 1, 重新打开时恢复 */
+    volume: "v3.volume",
 };
 
 export type IdleSource = "playlist" | "favorite" | "popular";
@@ -71,6 +79,13 @@ const [fansMedalThreshold, setFansMedalThreshold] = createSignal<number>(loadJSO
 const [enableSCBoost, setEnableSCBoost] = createSignal<boolean>(loadJSON(K.enableSCBoost, true));
 const [showLyrics, setShowLyrics] = createSignal<boolean>(loadJSON(K.showLyrics, true));
 const [theme, setTheme] = createSignal<"dark" | "light">(loadJSON(K.theme, "light"));
+const [shortcutPausePlay, setShortcutPausePlay] = createSignal<string>(loadJSON(K.shortcutPausePlay, ""));
+const [fadeEnabled, setFadeEnabled] = createSignal<boolean>(loadJSON(K.fadeEnabled, false));
+const [fadeDuration, setFadeDuration] = createSignal<number>(loadJSON(K.fadeDuration, 1000));
+const [volume, setVolume] = createSignal<number>(Math.max(0, Math.min(1, loadJSON(K.volume, 1))));
+
+/** 非持久化: 是否正在捕获快捷键, 用于全局监听跳过识别, 避免自触发 */
+const [capturingShortcut, setCapturingShortcut] = createSignal<boolean>(false);
 
 createEffect(() => saveJSON(K.musicPlatform, musicPlatform()));
 createEffect(() => saveJSON(K.danmuPlatform, danmuPlatform()));
@@ -93,6 +108,10 @@ createEffect(() => saveJSON(K.fansMedalThreshold, fansMedalThreshold()));
 createEffect(() => saveJSON(K.enableSCBoost, enableSCBoost()));
 createEffect(() => saveJSON(K.showLyrics, showLyrics()));
 createEffect(() => saveJSON(K.theme, theme()));
+createEffect(() => saveJSON(K.shortcutPausePlay, shortcutPausePlay()));
+createEffect(() => saveJSON(K.fadeEnabled, fadeEnabled()));
+createEffect(() => saveJSON(K.fadeDuration, fadeDuration()));
+createEffect(() => saveJSON(K.volume, volume()));
 
 export const settings = {
     musicPlatform, setMusicPlatform,
@@ -116,6 +135,11 @@ export const settings = {
     enableSCBoost, setEnableSCBoost,
     showLyrics, setShowLyrics,
     theme, setTheme,
+    shortcutPausePlay, setShortcutPausePlay,
+    fadeEnabled, setFadeEnabled,
+    fadeDuration, setFadeDuration,
+    volume, setVolume,
+    capturingShortcut, setCapturingShortcut,
 };
 
 /**
@@ -143,6 +167,9 @@ export function reloadSettingsFromStorage(): void {
     setEnableSCBoost(loadJSON(K.enableSCBoost, true));
     setShowLyrics(loadJSON(K.showLyrics, true));
     setTheme(loadJSON(K.theme, "light"));
+    setShortcutPausePlay(loadJSON(K.shortcutPausePlay, ""));
+    setFadeEnabled(loadJSON(K.fadeEnabled, false));
+    setFadeDuration(loadJSON(K.fadeDuration, 1000));
 }
 
 /** 追加一条空闲歌单历史 (按 platform+listId 去重, 上限 50 条) */

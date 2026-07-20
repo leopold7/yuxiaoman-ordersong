@@ -21,6 +21,7 @@ import { queue } from "./stores/queue";
 import { liveNotice } from "./stores/notice";
 import { audioPlayer } from "./infra/audio/AudioPlayer";
 import { startLiveStatePush, startLiveStatePoll, type LiveStateSnapshot } from "./stores/liveState";
+import { initGlobalShortcut } from "./infra/globalShortcut";
 import { ENV } from "./config/env";
 import { pushToast } from "./utils/toast";
 import styles from "./App.module.css";
@@ -56,6 +57,8 @@ function buildLiveSnapshot(): LiveStateSnapshot {
         })),
         notice: n ? { text: n.text, level: n.level } : null,
         nowUrl,
+        fadeEnabled: settings.fadeEnabled(),
+        fadeDuration: settings.fadeDuration(),
         t: Date.now()
     };
 }
@@ -138,9 +141,14 @@ export function App() {
     });
 
     onMount(async () => {
+        // 系统级全局快捷键（窗口失焦 / 最小化也能触发）：注册并随设置变化自动同步
+        initGlobalShortcut();
+
         if (ENV.VIEW === "lyrics" || ENV.VIEW === "stream" || ENV.VIEW === "list" || ENV.VIEW === "audio") return;
         await hydrateFromSharedConfig();
         reloadSettingsFromStorage();
+        // 恢复上次保存的音量 (否则每次打开都回到最大)
+        audioPlayer.setVolume(settings.volume());
         reloadSessionFromStorage();
         setBooted(true);
 

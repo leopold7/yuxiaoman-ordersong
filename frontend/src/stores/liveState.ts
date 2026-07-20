@@ -21,6 +21,8 @@ const EMPTY: LiveStateSnapshot = {
     playing: false,
     queue: [],
     notice: null,
+    fadeEnabled: false,
+    fadeDuration: 1000,
     t: 0,
 };
 

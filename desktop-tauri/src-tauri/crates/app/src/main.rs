@@ -9,13 +9,18 @@ mod webview_login;
 use std::time::{Duration, Instant};
 
 use ordersong_core::config;
+use std::fs;
+
 use tauri::{Manager, WindowEvent};
+use tauri_plugin_dialog;
+use tauri_plugin_global_shortcut;
 
 use crate::logger::write_log;
 
 const WAIT_BACKEND_TIMEOUT: Duration = Duration::from_secs(15);
 
-/// dev 模式下 Vite dev server 监听端口 
+/// dev 模式下 Vite dev server 监听端口
+
 #[cfg(debug_assertions)]
 const VITE_DEV_PORT: u16 = 5173;
 
@@ -33,6 +38,18 @@ fn main() {
         write_log(&format!("FATAL caught: {:?}", err));
         std::process::exit(2);
     }
+}
+
+/// 将配置备份写入用户通过对话框选择的任意路径 (供前端“备份配置”使用).
+#[tauri::command]
+fn write_text_file(path: String, contents: String) -> Result<(), String> {
+    fs::write(&path, contents).map_err(|e| format!("写入文件失败：{e}"))
+}
+
+/// 读取用户通过对话框选择的备份文件内容 (供前端“导入配置”使用).
+#[tauri::command]
+fn read_text_file(path: String) -> Result<String, String> {
+    fs::read_to_string(&path).map_err(|e| format!("读取文件失败：{e}"))
 }
 
 fn check_health(url: &str) -> bool {
@@ -69,6 +86,8 @@ fn run_app() {
     let state = ordersong_server::new_state(cfg);
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             webview_login::open_netease_login,
             webview_login::read_netease_cookies,
@@ -79,6 +98,8 @@ fn run_app() {
             browser::open_bili_live_settings,
             browser::open_bili_qr_login,
             browser::close_bili_live_settings,
+            write_text_file,
+            read_text_file,
         ])
         .setup(move |app| {
             write_log("setup() start");

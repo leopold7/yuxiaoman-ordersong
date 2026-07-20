@@ -29,6 +29,10 @@ export interface LiveStateSnapshot {
     queue: { sname: string; sartist: string; uname: string; platform?: string }[];
     notice: { text: string; level?: "success" | "warn" | "info" } | null;
     nowUrl?: string | null;
+    /** 淡入淡出开关 (主程序设置), 供 OBS 音频源 (?view=audio) 复刻同样的过渡 */
+    fadeEnabled?: boolean;
+    /** 淡入淡出时长 (ms) */
+    fadeDuration?: number;
     /** 主程序写快照时的 wall-clock (ms) , 用于 overlay 端插值平滑进度 */
     t: number;
 }

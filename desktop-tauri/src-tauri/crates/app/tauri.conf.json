@@ -42,10 +42,11 @@
         "resources": [
             "resources/**/*"
         ],
-        "windows": {
-            "nsis": {
-                "displayLanguageSelector": false,
-                "installMode": "perMachine",
+            "windows": {
+                "nsis": {
+                    "installerHooks": "installer-hooks.nsh",
+                    "displayLanguageSelector": false,
+                    "installMode": "perMachine",
                 "languages": ["SimpChinese"],
                 "installerIcon": "icons/icon.ico",
                 "uninstallerIcon": "icons/icon.ico",
