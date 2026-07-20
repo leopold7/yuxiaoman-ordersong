@@ -165,4 +165,4 @@ jobs:
           EXE=$(ls desktop-tauri/src-tauri/target/release/bundle/nsis/*.exe | head -n1)
           gh release create "${{ steps.version.outputs.tag }}" "$EXE" \
             --title "v${{ steps.version.outputs.version }}" \
-            --notes "自动构建版本 v${{ steps.version.outputs.version }}"
+            --generate-notes
