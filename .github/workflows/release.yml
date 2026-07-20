@@ -46,7 +46,7 @@ jobs:
         if: steps.check.outputs.exists != 'true'
         uses: pnpm/action-setup@v4
         with:
-          version: 9
+          cache: true
 
       - name: Setup Node.js
         if: steps.check.outputs.exists != 'true'
