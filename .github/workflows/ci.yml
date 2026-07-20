@@ -158,13 +158,12 @@ jobs:
         if: steps.check.outputs.exists != 'true'
         run: pnpm --filter ordersong-desktop installer
 
-      # 中文 productName 在 CI(非中文代码页)下会被 NSIS 丢弃, 导致 exe 名变为 _x.x.x...
-      # 这里检测到下划线开头就补回「鱼小曼点歌助手」(用 Node 保证 Unicode 写入)
-      - name: Fix installer filename
+      # CI(非中文代码页)下中文 productName 会被 NSIS 丢弃, 直接把安装包改名为英文名, 不再做检测
+      - name: Rename installer to English name
         if: steps.check.outputs.exists != 'true'
         shell: bash
         run: |
-          node -e "const fs=require('fs'),path=require('path');const dir='desktop-tauri/src-tauri/target/release/bundle/nsis';const f=fs.readdirSync(dir).find(x=>x.toLowerCase().endsWith('.exe'));if(f&&f.startsWith('_')){const nf='鱼小曼点歌助手'+f;fs.renameSync(path.join(dir,f),path.join(dir,nf));console.log('已重命名为 '+nf);}else{console.log('无需重命名: '+(f||'(无 exe)'));}"
+          node -e "const fs=require('fs'),path=require('path');const dir='desktop-tauri/src-tauri/target/release/bundle/nsis';const f=fs.readdirSync(dir).find(x=>x.toLowerCase().endsWith('.exe'));if(f){const nf='yuxiaoman-ordersong_${{ steps.version.outputs.version }}_x64-setup.exe';fs.renameSync(path.join(dir,f),path.join(dir,nf));console.log('已重命名为 '+nf);}else{console.log('未找到 exe');}"
 
       - name: Publish release
         if: steps.check.outputs.exists != 'true'
