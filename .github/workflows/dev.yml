@@ -53,6 +53,12 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       # tauri-build 需要 icons/icon.ico（被 .gitignore 忽略，这里从 logo.png 重新生成）
+      - name: Show current branch/commit
+        shell: bash
+        run: |
+          echo "branch: $(git branch --show-current)"
+          echo "commit: $(git rev-parse HEAD)"
+
       - name: Generate icon
         run: node desktop-tauri/scripts/gen-icon.mjs
 
@@ -66,6 +72,15 @@ jobs:
         shell: bash
         run: |
           node -e "const fs=require('fs'),path=require('path');const dir='desktop-tauri/src-tauri/target/release/bundle/nsis';const f=fs.readdirSync(dir).find(x=>x.toLowerCase().endsWith('.exe'));if(f){const nf='yuxiaoman-ordersong_dev_x64-setup.exe';fs.renameSync(path.join(dir,f),path.join(dir,nf));console.log('已重命名为 '+nf);}else{console.log('未找到 exe');}"
+
+      # 同时把 exe 作为 Actions 运行产物上传，方便在 Actions 运行页直接下载（Release 里也会附同一份）
+      - name: Upload exe artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: yuxiaoman-ordersong_dev_x64-setup
+          path: desktop-tauri/src-tauri/target/release/bundle/nsis/*.exe
+          if-no-files-found: error
+          retention-days: 30
 
       # 清理上一份 dev 预发布及其 tag（gh release delete 默认同时删除 tag）
       - name: Remove previous dev prerelease
@@ -94,15 +109,17 @@ jobs:
           TAG="dev-latest"
           EXE=$(ls desktop-tauri/src-tauri/target/release/bundle/nsis/*.exe | head -n1)
           REPO="${{ github.repository }}"
-          SHORT="${{ github.sha }}"
-          SHORT="${SHORT:0:7}"
+          # 用实际 checkout 出来的提交（dev 的 HEAD），而非 github.sha，
+          # 否则手动触发(workflow_dispatch 默认 master)时显示的 commit/target 会错误地指向 master。
+          SHA="$(git rev-parse HEAD)"
+          SHORT="${SHA:0:7}"
 
           {
             echo "## Dev 预发布版 (dev-latest)"
             echo
             echo "> 此预发布由 \`dev\` 分支自动构建，**仅保留最新的一份**，旧版本会被自动清理。"
             echo
-            echo "**Commit:** [\`$SHORT\`](https://github.com/$REPO/commit/${{ github.sha }})"
+            echo "**Commit:** [\`$SHORT\`](https://github.com/$REPO/commit/$SHA)"
             echo "**构建时间:** $(date -u '+%Y-%m-%d %H:%M UTC')"
             echo
             echo "### 最近提交"
@@ -114,5 +131,5 @@ jobs:
           gh release create "$TAG" "$EXE" \
             --title "Dev Prerelease ($SHORT)" \
             --notes-file dev-notes.md \
-            --target "${{ github.sha }}" \
+            --target "$SHA" \
             --prerelease
