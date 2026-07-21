@@ -36,6 +36,8 @@ const K = {
     enableSCBoost: "v3.enableSCBoost",
     showLyrics: "v3.showLyrics",
     theme: "v3.theme",
+    /** 自定义主题强调色 (hex, 如 "#ff5fa2") */
+    accentColor: "v3.accentColor",
     /** 暂停/播放 快捷键组合 (如 "Ctrl+Space"), 空串表示未设置 */
     shortcutPausePlay: "v3.shortcutPausePlay",
     /** 淡入淡出: 暂停/播放音频时是否走淡入淡出过渡, 默认关 */
@@ -53,6 +55,9 @@ const K = {
 
 export type IdleSource = "playlist" | "favorite" | "popular";
 export type DanmuMode = "open" | "room";
+
+/** 默认主题强调色 (与 global.css 中 --accent 初始值保持一致) */
+export const DEFAULT_ACCENT_COLOR = "#ff5fa2";
 
 export interface SongListHistoryItem {
     platform: Platform;
@@ -84,6 +89,7 @@ const [fansMedalThreshold, setFansMedalThreshold] = createSignal<number>(loadJSO
 const [enableSCBoost, setEnableSCBoost] = createSignal<boolean>(loadJSON(K.enableSCBoost, true));
 const [showLyrics, setShowLyrics] = createSignal<boolean>(loadJSON(K.showLyrics, true));
 const [theme, setTheme] = createSignal<"dark" | "light">(loadJSON(K.theme, "light"));
+const [accentColor, setAccentColor] = createSignal<string>(loadJSON(K.accentColor, DEFAULT_ACCENT_COLOR));
 const [shortcutPausePlay, setShortcutPausePlay] = createSignal<string>(loadJSON(K.shortcutPausePlay, ""));
 const [fadeEnabled, setFadeEnabled] = createSignal<boolean>(loadJSON(K.fadeEnabled, false));
 const [fadeDuration, setFadeDuration] = createSignal<number>(loadJSON(K.fadeDuration, 1000));
@@ -118,6 +124,7 @@ createEffect(() => saveJSON(K.fansMedalThreshold, fansMedalThreshold()));
 createEffect(() => saveJSON(K.enableSCBoost, enableSCBoost()));
 createEffect(() => saveJSON(K.showLyrics, showLyrics()));
 createEffect(() => saveJSON(K.theme, theme()));
+createEffect(() => saveJSON(K.accentColor, accentColor()));
 createEffect(() => saveJSON(K.shortcutPausePlay, shortcutPausePlay()));
 createEffect(() => saveJSON(K.fadeEnabled, fadeEnabled()));
 createEffect(() => saveJSON(K.fadeDuration, fadeDuration()));
@@ -149,6 +156,7 @@ export const settings = {
     enableSCBoost, setEnableSCBoost,
     showLyrics, setShowLyrics,
     theme, setTheme,
+    accentColor, setAccentColor,
     shortcutPausePlay, setShortcutPausePlay,
     fadeEnabled, setFadeEnabled,
     fadeDuration, setFadeDuration,
@@ -185,6 +193,7 @@ export function reloadSettingsFromStorage(): void {
     setEnableSCBoost(loadJSON(K.enableSCBoost, true));
     setShowLyrics(loadJSON(K.showLyrics, true));
     setTheme(loadJSON(K.theme, "light"));
+    setAccentColor(loadJSON(K.accentColor, DEFAULT_ACCENT_COLOR));
     setShortcutPausePlay(loadJSON(K.shortcutPausePlay, ""));
     setFadeEnabled(loadJSON(K.fadeEnabled, false));
     setFadeDuration(loadJSON(K.fadeDuration, 1000));

@@ -4,6 +4,7 @@ import { NowPlayingBar } from "./components/NowPlayingBar/NowPlayingBar";
 import { OrderTable } from "./components/OrderTable/OrderTable";
 import { LyricView } from "./components/LyricView/LyricView";
 import { SettingsPanel, goToSettingsTab } from "./components/SettingsPanel/SettingsPanel";
+import { ThemeColorPicker } from "./components/ThemeColorPicker/ThemeColorPicker";
 import { StreamOverlay } from "./components/StreamOverlay/StreamOverlay";
 import { ListOverlay } from "./components/ListOverlay/ListOverlay";
 import { AudioBridge } from "./components/AudioBridge/AudioBridge";
@@ -25,6 +26,7 @@ import { initGlobalShortcut } from "./infra/globalShortcut";
 import { ENV } from "./config/env";
 import { APP_VERSION } from "@/version";
 import { pushToast } from "./utils/toast";
+import { applyAccentColor } from "./utils/accent";
 import styles from "./App.module.css";
 
 /** 主程序: 把当前播放快照拼装出来推给后端, 供 OBS 浏览器源同步 */
@@ -135,6 +137,11 @@ export function App() {
 
     createEffect(() => {
         document.body.classList.toggle("theme-light", settings.theme() === "light");
+    });
+
+    // 自定义主题强调色: 变化时实时写入根节点 CSS 变量
+    createEffect(() => {
+        applyAccentColor(settings.accentColor());
     });
 
     createEffect(() => {
@@ -269,6 +276,7 @@ export function App() {
                     </button>
                 </Show>
                 <div class={styles.spacer} />
+                <ThemeColorPicker />
                 <button
                     class={styles.headerBtn}
                     onClick={() => settings.setTheme(settings.theme() === "dark" ? "light" : "dark")}
