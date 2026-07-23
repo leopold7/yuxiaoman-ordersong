@@ -34,5 +34,7 @@ export function applyAccentColor(hex: string): void {
     root.setProperty("--accent", norm);
     root.setProperty("--accent-soft", `rgba(${r}, ${g}, ${b}, 0.14)`);
     root.setProperty("--glow", `0 0 0 3px rgba(${r}, ${g}, ${b}, 0.18)`);
+    root.setProperty("--accent-shadow", `0 4px 14px rgba(${r}, ${g}, ${b}, 0.28)`);
+    root.setProperty("--accent-shadow-lg", `0 6px 18px rgba(${r}, ${g}, ${b}, 0.4)`);
     root.setProperty("--accent-grad", `linear-gradient(135deg, ${norm} 0%, #b06bff 50%, #5fd0ff 100%)`);
 }

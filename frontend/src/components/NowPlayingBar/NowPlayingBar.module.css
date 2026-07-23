@@ -172,7 +172,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 6px 18px rgba(255, 95, 162, 0.4);
+    box-shadow: var(--accent-shadow-lg);
     padding: 0;
 }
 .playBtn:active { transform: scale(0.96); }
