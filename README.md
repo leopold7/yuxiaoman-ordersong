@@ -1,7 +1,7 @@
 本项目相较原项目，新增了如下内容：
 
 * 个性化：音频淡入淡出、直播叠加层个性化显示、快捷键暂停/播放
-* 系统：主题设置、关闭方式设置
+* 系统：主题设置、关闭方式设置、导入导出配置
 
 本项目自动构建exe，可前往[Release](https://github.com/leopold7/yuxiaoman-ordersong/releases)页面中下载即可。
 
