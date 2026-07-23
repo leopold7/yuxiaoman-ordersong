@@ -47,6 +47,8 @@ export const SHARED_KEYS: readonly string[] = [
     "v3.obs.showScrollLyrics",
     "v3.obs.showNextPreview",
     "v3.obs.showNotice",
+    // 关闭方式 (缓存配置共享)
+    "v3.closeMethod",
     // 名单 / 历史
     "v3.userBlackList",
     "v3.songBlackList",

@@ -11,7 +11,7 @@ use std::time::{Duration, Instant};
 use ordersong_core::config;
 use std::fs;
 
-use tauri::{Manager, WindowEvent};
+use tauri::{Emitter, Listener, Manager, WindowEvent};
 
 use crate::logger::write_log;
 
@@ -102,6 +102,20 @@ fn run_app() {
             write_log("setup() start");
             tray::build(app)?;
 
+            // 监听前端在"退出方式选择"弹窗中的选择
+            let handle_min = app.handle().clone();
+            app.listen("exit-choice-minimize", move |_| {
+                if let Some(win) = handle_min.get_webview_window("main") {
+                    let _ = win.hide();
+                    write_log("[main] 用户选择最小化到托盘");
+                }
+            });
+            let handle_quit = app.handle().clone();
+            app.listen("exit-choice-quit", move |_| {
+                write_log("[main] 用户选择直接退出");
+                std::process::exit(0);
+            });
+
             // 启动内嵌 axum 服务
             let state_for_serve = state.clone();
             tauri::async_runtime::spawn(async move {
@@ -147,12 +161,15 @@ fn run_app() {
             Ok(())
         })
         .on_window_event(|window, event| {
-            //隐藏到托盘
+            // 点击关闭按钮: 阻止默认关闭, 让前端弹出"请选择退出方式"对话框
             if let WindowEvent::CloseRequested { api, .. } = event {
                 if window.label() == "main" {
                     api.prevent_close();
-                    let _ = window.hide();
-                    write_log("[main] 关闭按钮 → 已隐藏到托盘");
+                    // 通知前端展示退出方式选择弹窗
+                    if let Err(e) = window.emit("request-exit-choice", ()) {
+                        write_log(&format!("[main] 发送 request-exit-choice 失败: {e}"));
+                    }
+                    write_log("[main] 关闭按钮 → 请求选择退出方式");
                 }
             }
         })

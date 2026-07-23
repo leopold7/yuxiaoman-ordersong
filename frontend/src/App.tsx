@@ -9,6 +9,7 @@ import { StreamOverlay } from "./components/StreamOverlay/StreamOverlay";
 import { ListOverlay } from "./components/ListOverlay/ListOverlay";
 import { AudioBridge } from "./components/AudioBridge/AudioBridge";
 import { OnboardingModal } from "./components/OnboardingModal/OnboardingModal";
+import { ExitChoiceModal } from "./components/ExitChoiceModal/ExitChoiceModal";
 import { BiliQrLogin } from "./components/BiliQrLogin/BiliQrLogin";
 import { startDanmu } from "./services/DanmuService";
 import { loadIdleByCurrentSource, lyrics, activeLyricIdx, lyricLoading } from "./services/PlayerService";
@@ -27,6 +28,7 @@ import { ENV } from "./config/env";
 import { APP_VERSION } from "@/version";
 import { pushToast } from "./utils/toast";
 import { applyAccentColor } from "./utils/accent";
+import { isTauri } from "@/infra/tauri/invoke";
 import styles from "./App.module.css";
 
 /** 主程序: 把当前播放快照拼装出来推给后端, 供 OBS 浏览器源同步 */
@@ -134,6 +136,7 @@ export function App() {
     const [showSettings, setShowSettings] = createSignal(true);
     const [onboardingDismissed, setOnboardingDismissed] = createSignal(false);
     const [booted, setBooted] = createSignal(false);
+    const [showExitChoice, setShowExitChoice] = createSignal(false);
 
     createEffect(() => {
         document.body.classList.toggle("theme-light", settings.theme() === "light");
@@ -179,6 +182,24 @@ export function App() {
         }
 
         startLiveStatePush(buildLiveSnapshot);
+
+        // 监听 Rust 发出的"请求选择退出方式"事件（点关闭按钮时触发）
+        if (isTauri()) {
+            import("@tauri-apps/api/event").then(({ listen, emit }) => {
+                listen<unknown>("request-exit-choice", () => {
+                    const m = settings.closeMethod();
+                    // 已记住选择: 直接执行对应退出方式, 不再弹窗
+                    if (m === "minimize") {
+                        void emit("exit-choice-minimize");
+                    } else if (m === "quit") {
+                        void emit("exit-choice-quit");
+                    } else {
+                        // 询问(默认): 弹出选择框
+                        setShowExitChoice(true);
+                    }
+                }).catch(() => {});
+            });
+        }
     });
 
     if (ENV.VIEW === "lyrics") {
@@ -254,6 +275,9 @@ export function App() {
             <Toast />
             <Show when={showOnboarding()}>
                 <OnboardingModal onClose={() => setOnboardingDismissed(true)} />
+            </Show>
+            <Show when={showExitChoice()}>
+                <ExitChoiceModal onClose={() => setShowExitChoice(false)} />
             </Show>
             <Show when={showRoomLogin()}>
                 <BiliQrLogin

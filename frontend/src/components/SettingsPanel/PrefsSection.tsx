@@ -138,6 +138,24 @@ export function PrefsSection() {
                     </div>
                 </div>
             </div>
+
+            <div class={styles.section}>
+                <h3>系统设置</h3>
+                <div class={styles.row}>
+                    <label>关闭方式</label>
+                    <select
+                        value={settings.closeMethod()}
+                        onChange={(e) =>
+                            settings.setCloseMethod(e.currentTarget.value as "ask" | "minimize" | "quit")
+                        }
+                    >
+                        <option value="ask">询问（每次弹出选择）</option>
+                        <option value="minimize">最小化到托盘</option>
+                        <option value="quit">直接退出</option>
+                    </select>
+                    <span />
+                </div>
+            </div>
         </>
     );
 }

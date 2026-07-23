@@ -51,10 +51,14 @@ const K = {
     obsShowScrollLyrics: "v3.obs.showScrollLyrics",
     obsShowNextPreview: "v3.obs.showNextPreview",
     obsShowNotice: "v3.obs.showNotice",
+    /** 关闭方式: ask / minimize / quit */
+    closeMethod: "v3.closeMethod",
 };
 
 export type IdleSource = "playlist" | "favorite" | "popular";
 export type DanmuMode = "open" | "room";
+/** 关闭方式: ask=每次询问 / minimize=最小化到托盘 / quit=直接退出 */
+export type CloseMethod = "ask" | "minimize" | "quit";
 
 /** 默认主题强调色 (与 global.css 中 --accent 初始值保持一致) */
 export const DEFAULT_ACCENT_COLOR = "#ff5fa2";
@@ -99,6 +103,8 @@ const [obsShowSongCard, setObsShowSongCard] = createSignal<boolean>(loadJSON(K.o
 const [obsShowScrollLyrics, setObsShowScrollLyrics] = createSignal<boolean>(loadJSON(K.obsShowScrollLyrics, true));
 const [obsShowNextPreview, setObsShowNextPreview] = createSignal<boolean>(loadJSON(K.obsShowNextPreview, true));
 const [obsShowNotice, setObsShowNotice] = createSignal<boolean>(loadJSON(K.obsShowNotice, true));
+// 关闭方式 (默认询问)
+const [closeMethod, setCloseMethod] = createSignal<CloseMethod>(loadJSON(K.closeMethod, "ask") as CloseMethod);
 
 /** 非持久化: 是否正在捕获快捷键, 用于全局监听跳过识别, 避免自触发 */
 const [capturingShortcut, setCapturingShortcut] = createSignal<boolean>(false);
@@ -133,6 +139,7 @@ createEffect(() => saveJSON(K.obsShowSongCard, obsShowSongCard()));
 createEffect(() => saveJSON(K.obsShowScrollLyrics, obsShowScrollLyrics()));
 createEffect(() => saveJSON(K.obsShowNextPreview, obsShowNextPreview()));
 createEffect(() => saveJSON(K.obsShowNotice, obsShowNotice()));
+createEffect(() => saveJSON(K.closeMethod, closeMethod()));
 
 export const settings = {
     musicPlatform, setMusicPlatform,
@@ -165,6 +172,7 @@ export const settings = {
     obsShowScrollLyrics, setObsShowScrollLyrics,
     obsShowNextPreview, setObsShowNextPreview,
     obsShowNotice, setObsShowNotice,
+    closeMethod, setCloseMethod,
     capturingShortcut, setCapturingShortcut,
 };
 
@@ -201,6 +209,7 @@ export function reloadSettingsFromStorage(): void {
     setObsShowScrollLyrics(loadJSON(K.obsShowScrollLyrics, true));
     setObsShowNextPreview(loadJSON(K.obsShowNextPreview, true));
     setObsShowNotice(loadJSON(K.obsShowNotice, true));
+    setCloseMethod(loadJSON(K.closeMethod, "ask") as CloseMethod);
 }
 
 /** 追加一条空闲歌单历史 (按 platform+listId 去重, 上限 50 条) */
