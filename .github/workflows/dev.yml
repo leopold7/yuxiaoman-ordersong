@@ -114,6 +114,15 @@ jobs:
           SHA="$(git rev-parse HEAD)"
           SHORT="${SHA:0:7}"
 
+          # 取 master 上一个正式版本 tag(v*, 排除 dev-latest 预发布 tag)作为日志起点,
+          # 展示相对上一个正式版本的全部提交, 而非固定的最近 N 条。
+          PREV=$(git describe --tags --abbrev=0 --match "v*" 2>/dev/null || true)
+          if [ -n "$PREV" ]; then
+            RANGE="$PREV..HEAD"
+          else
+            RANGE="HEAD"
+          fi
+
           {
             echo "## Dev 预发布版 (dev-latest)"
             echo
@@ -122,9 +131,13 @@ jobs:
             echo "**Commit:** [\`$SHORT\`](https://github.com/$REPO/commit/$SHA)"
             echo "**构建时间:** $(date -u '+%Y-%m-%d %H:%M UTC')"
             echo
-            echo "### 最近提交"
+            if [ -n "$PREV" ]; then
+              echo "### 相对上一正式版本 \`$PREV\` 的提交记录"
+            else
+              echo "### 提交记录"
+            fi
             echo
-            git log -n 10 --no-merges --pretty=format:"- [\`%h\`](https://github.com/$REPO/commit/%H) %s — _%an_"
+            git log "$RANGE" --no-merges --pretty=format:"- [\`%h\`](https://github.com/$REPO/commit/%H) %s — _%an_"
             echo
           } > dev-notes.md
 
