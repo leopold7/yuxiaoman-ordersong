@@ -35,4 +35,8 @@ export interface LiveStateSnapshot {
     fadeDuration?: number;
     /** 主程序写快照时的 wall-clock (ms) , 用于 overlay 端插值平滑进度 */
     t: number;
+    /** 自定义主题强调色 (hex, 如 "#ff5fa2") , 主程序推送让 OBS 浏览器源同步 */
+    accentColor?: string;
+    /** 主题: dark / light, 主程序推送让 OBS 浏览器源同步 */
+    theme?: "dark" | "light";
 }

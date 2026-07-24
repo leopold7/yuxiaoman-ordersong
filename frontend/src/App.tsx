@@ -64,6 +64,8 @@ function buildLiveSnapshot(): LiveStateSnapshot {
         nowUrl,
         fadeEnabled: settings.fadeEnabled(),
         fadeDuration: settings.fadeDuration(),
+        accentColor: settings.accentColor(),
+        theme: settings.theme(),
         t: Date.now()
     };
 }
@@ -149,6 +151,15 @@ export function App() {
 
     createEffect(() => {
         if (danmuNeedCode()) setOnboardingDismissed(false);
+    });
+
+    // 叠加层 (OBS 浏览器源等独立 web 视图): 不依赖主程序 live-state 实时推送,
+    // 启动时直接从共享配置拉取主题色/主题, 保证即使主程序尚未推送也能显示客户端设置的主题色
+    createEffect(() => {
+        const v = ENV.VIEW;
+        if (v === "lyrics" || v === "stream" || v === "list" || v === "audio") {
+            void hydrateFromSharedConfig().then(() => reloadSettingsFromStorage());
+        }
     });
 
     onMount(async () => {
