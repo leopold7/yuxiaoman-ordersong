@@ -28,6 +28,7 @@
     /* 平台主题色：可在此一处修改全局生效 */
     --platform-wy: #ff2d55;
     --platform-qq: #14a44d;
+    --platform-bili: #fb7299;
 }
 
 html.theme-light, body.theme-light {

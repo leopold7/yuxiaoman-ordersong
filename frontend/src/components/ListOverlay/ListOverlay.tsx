@@ -23,7 +23,8 @@ export function ListOverlay() {
     };
     const list = () => liveState().queue;
 
-    const platformBadge = (p?: string) => (p === "qq" ? "QQ" : p === "wy" ? "网易云" : "");
+    const platformBadge = (p?: string) =>
+        p === "qq" ? "QQ" : p === "wy" ? "网易云" : p === "bili" ? "B站" : "";
 
     const activeLine = (): string => {
         const s = liveState();
@@ -110,7 +111,7 @@ export function ListOverlay() {
                             <div class={styles.rowMain}>
                                 <div class={styles.snameLine}>
                                     <Show when={platformBadge(item.platform)}>
-                                        <span class={`${styles.badge} ${item.platform === "qq" ? styles.qq : styles.wy}`}>
+                                        <span class={`${styles.badge} ${item.platform === "qq" ? styles.qq : item.platform === "bili" ? styles.bili : styles.wy}`}>
                                             {platformBadge(item.platform)}
                                         </span>
                                     </Show>

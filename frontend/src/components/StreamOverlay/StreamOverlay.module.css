@@ -169,6 +169,7 @@
 }
 .badge.wy { background: #ff2d55; }
 .badge.qq { background: #14a44d; }
+.badge.bili { background: var(--platform-bili, #fb7299); }
 
 /* 队列为空时的提示 */
 .queueEmpty {

@@ -1,5 +1,5 @@
-/** 支持的音乐平台 -- 当前仅网易云 wy 与 QQ 音乐 qq */
-export type Platform = "wy" | "qq";
+/** 支持的音乐平台 -- 网易云 wy / QQ 音乐 qq / B 站 bili (BV 号点歌) */
+export type Platform = "wy" | "qq" | "bili";
 
 /**
  * 一首歌的标准化描述

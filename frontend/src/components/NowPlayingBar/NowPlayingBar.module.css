@@ -81,6 +81,7 @@
 }
 .badge.wy { background: var(--platform-wy); }
 .badge.qq { background: var(--platform-qq); }
+.badge.bili { background: var(--platform-bili); }
 .user { color: var(--text-1); }
 
 .progressRow {

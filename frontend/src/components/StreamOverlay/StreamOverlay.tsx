@@ -3,7 +3,8 @@ import { liveState, smoothCurrentTime } from "@/stores/liveState";
 import { ENV } from "@/config/env";
 import styles from "./StreamOverlay.module.css";
 
-const platformBadge = (p?: string) => (p === "qq" ? "QQ" : p === "wy" ? "网易云" : "");
+const platformBadge = (p?: string) =>
+    p === "qq" ? "QQ" : p === "wy" ? "网易云" : p === "bili" ? "B站" : "";
 
 function fmt(sec: number): string {
     if (!isFinite(sec) || sec <= 0) return "00:00";
@@ -84,7 +85,7 @@ export function StreamOverlay() {
                                 <div class={styles.titleRow}>
                                     <span class={styles.titleText}>{it().sname} - {it().sartist}</span>
                                     <Show when={platformBadge(it().platform)}>
-                                        <span class={`${styles.badge} ${it().platform === "qq" ? styles.qq : styles.wy}`}>
+                                        <span class={`${styles.badge} ${it().platform === "qq" ? styles.qq : it().platform === "bili" ? styles.bili : styles.wy}`}>
                                             {platformBadge(it().platform)}
                                         </span>
                                     </Show>
@@ -128,7 +129,7 @@ export function StreamOverlay() {
                                     <span class={styles.queueSong}>
                                         <span class={styles.queueSongText}><b>{it.sname}</b> - {it.sartist}</span>
                                         <Show when={platformBadge(it.platform)}>
-                                            <span class={`${styles.badge} ${it.platform === "qq" ? styles.qq : styles.wy}`}>
+                                            <span class={`${styles.badge} ${it.platform === "qq" ? styles.qq : it.platform === "bili" ? styles.bili : styles.wy}`}>
                                                 {platformBadge(it.platform)}
                                             </span>
                                         </Show>

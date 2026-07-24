@@ -7,6 +7,7 @@
 
 import { neteaseApi } from "@/api/netease";
 import { qqApi } from "@/api/qq";
+import { resolveBili, biliStreamUrl } from "@/api/biliMusic";
 import { loadWyCookie } from "@/stores/session";
 import { settings } from "@/stores/settings";
 import type { Platform, SongInfo } from "@/types/song";
@@ -287,16 +288,59 @@ export const qqService: MusicService & {
     },
 };
 
+/** B 站 BV 号点歌服务. */
+export const biliService: MusicService = {
+    platform: "bili",
+
+    async search(keyword) {
+        const list = await biliService.searchMulti(keyword, 1);
+        return list[0] ?? null;
+    },
+
+    async searchMulti(keyword, limit = 1) {
+        try {
+            const { data } = await resolveBili(keyword);
+            if (data?.code !== 0 || !data?.sname) return [];
+            const song: SongInfo = {
+                platform: "bili",
+                sid: keyword,
+                sname: data.sname,
+                sartist: data.sartist ?? "",
+                duration: data.duration,
+                coverUrl: data.coverUrl,
+                albumName: "B站",
+            };
+            return limit >= 1 ? [song] : [];
+        } catch (err) {
+            console.warn("[bili] 解析失败:", err);
+            return [];
+        }
+    },
+
+    async getSongUrl(sid) {
+        return biliStreamUrl(String(sid));
+    },
+
+    async getSongList() {
+        return [];
+    },
+
+    async getLyric() {
+        return null;
+    },
+};
+
 const registry: Record<Platform, MusicService> = {
     wy: neteaseService,
     qq: qqService,
+    bili: biliService,
 };
 
 /** 支持的音乐平台列表. */
-export const PLATFORMS: Platform[] = ["wy", "qq"];
+export const PLATFORMS: Platform[] = ["wy", "qq", "bili"];
 
 /** 按平台 key 取对应服务, 非法 key 回退网易云. */
 export function getMusic(p?: Platform | string | null): MusicService {
-    if (p === "wy" || p === "qq") return registry[p];
+    if (p === "wy" || p === "qq" || p === "bili") return registry[p];
     return registry.wy;
 }

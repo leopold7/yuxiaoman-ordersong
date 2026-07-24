@@ -131,7 +131,7 @@ export function AboutSection() {
                 }}>BETA</span>
             </p>
             <p>版本：<code>v{APP_VERSION}</code>（测试版，欢迎反馈问题）</p>
-            <p>支持平台：网易云音乐 / QQ 音乐</p>
+            <p>支持平台：网易云音乐 / QQ 音乐 / B站（BV 号点歌）</p>
             <p>联系方式：<a href="mailto:dm075@qq.com">dm075@qq.com</a></p>
 
             <p style={{ "margin-top": "10px" }}><b>观众弹幕指令：</b></p>
