@@ -1,6 +1,11 @@
 import { For, Show, createEffect, createSignal } from "solid-js";
 import { liveState, smoothCurrentTime } from "@/stores/liveState";
+import { pushToast } from "@/utils/toast";
 import styles from "./ListOverlay.module.css";
+
+function showQuality(name: string, quality?: string) {
+    pushToast(`【${name}】播放品质：${quality || "未知"}`, "info");
+}
 
 function fmt(sec: number): string {
     if (!isFinite(sec) || sec <= 0) return "00:00";
@@ -71,7 +76,11 @@ export function ListOverlay() {
 
             <Show when={now()} fallback={<div class={styles.nowEmpty}>暂无播放</div>}>
                 {(it) => (
-                    <div class={styles.nowCard}>
+                    <div
+                        class={styles.nowCard}
+                        title="双击查看当前播放品质"
+                        ondblclick={() => showQuality(it().sname, it().quality)}
+                    >
                         <div class={styles.nowRow}>
                             <span class={styles.eq}><i /><i /><i /></span>
                             <div class={styles.nowMain}>
@@ -106,7 +115,11 @@ export function ListOverlay() {
             <div class={styles.list}>
                 <For each={list()} fallback={<div class={styles.listEmpty}>队列空空，发弹幕点歌吧～</div>}>
                     {(item, i) => (
-                        <div class={styles.row}>
+                        <div
+                            class={styles.row}
+                            title="双击查看播放品质"
+                            ondblclick={() => showQuality(item.sname, item.quality)}
+                        >
                             <span class={styles.idx}>{i() + 1}</span>
                             <div class={styles.rowMain}>
                                 <div class={styles.snameLine}>

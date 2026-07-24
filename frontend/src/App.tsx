@@ -58,7 +58,8 @@ function buildLiveSnapshot(): LiveStateSnapshot {
             sname: it.song.sname,
             sartist: it.song.sartist,
             uname: it.uname,
-            platform: it.song.platform
+            platform: it.song.platform,
+            quality: it.song.quality
         })),
         notice: n ? { text: n.text, level: n.level } : null,
         nowUrl,

@@ -15,4 +15,6 @@ export interface SongInfo {
     duration?: number;
     coverUrl?: string;
     albumName?: string;
+    /** 播放音质标签 (B 站为后端实测, 网易云/QQ 为请求档位). */
+    quality?: string;
 }

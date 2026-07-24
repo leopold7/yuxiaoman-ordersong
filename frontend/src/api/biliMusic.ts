@@ -17,6 +17,7 @@ export interface BiliResolveResp {
     sartist?: string;
     duration?: number;
     coverUrl?: string;
+    quality?: string;
     bvid?: string;
 }
 

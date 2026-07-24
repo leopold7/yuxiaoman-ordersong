@@ -14,6 +14,7 @@ export interface LiveNowPlaying {
     platform: string;
     coverUrl?: string;
     uname: string;
+    quality?: string;
 }
 
 /** 一次完整的播放状态快照 */
@@ -26,7 +27,7 @@ export interface LiveStateSnapshot {
     currentTime: number;
     duration: number;
     playing: boolean;
-    queue: { sname: string; sartist: string; uname: string; platform?: string }[];
+    queue: { sname: string; sartist: string; uname: string; platform?: string; quality?: string }[];
     notice: { text: string; level?: "success" | "warn" | "info" } | null;
     nowUrl?: string | null;
     /** 淡入淡出开关 (主程序设置), 供 OBS 音频源 (?view=audio) 复刻同样的过渡 */

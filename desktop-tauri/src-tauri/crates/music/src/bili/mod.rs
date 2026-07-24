@@ -16,13 +16,21 @@ use serde_json::Value;
 /// WBI 密钥缓存有效期 (秒)
 const WBI_TTL_SECS: u64 = 300;
 
-/// 视频元数据 + 首 P cid
+/// 视频元数据 + 首 P cid + 实际播放音质标签
 pub struct BiliResolve {
     pub sname: String,
     pub sartist: String,
     pub duration: u64,
     pub cover_url: String,
     pub cid: u64,
+    /// 实际选中的音质 (如 "Hi-Res 无损" / "FLAC 无损" / "杜比全景声" / "标准音质 192k")
+    pub quality: String,
+}
+
+/// 音频直链 + 其音质标签
+pub struct BiliAudio {
+    pub url: String,
+    pub quality: String,
 }
 
 pub struct BiliMusicClient {
@@ -40,7 +48,7 @@ impl BiliMusicClient {
     }
 
     /// 取 mixin_key, 命中缓存则跳过 nav 请求
-    async fn mixin_key(&self) -> Result<String, String> {
+    async fn mixin_key(&self, cookie: &str) -> Result<String, String> {
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .map(|d| d.as_secs())
@@ -51,7 +59,7 @@ impl BiliMusicClient {
                 return Ok(get_mixin_key(&img, &sub));
             }
         }
-        let (img, sub) = fetch_wbi_keys(&self.http, "")
+        let (img, sub) = fetch_wbi_keys(&self.http, cookie)
             .await
             .ok_or_else(|| "获取 B 站 WBI 密钥失败".to_string())?;
         let _ = self
@@ -62,13 +70,14 @@ impl BiliMusicClient {
     }
 
     /// 解析 BV 号 -> 元数据 + cid
-    pub async fn resolve(&self, bvid: &str) -> Result<BiliResolve, String> {
+    pub async fn resolve(&self, bvid: &str, cookie: &str) -> Result<BiliResolve, String> {
         let url = format!("https://api.bilibili.com/x/web-interface/view?bvid={}", bvid);
         let body: Value = self
             .http
             .get(&url)
             .header("User-Agent", DEFAULT_UA)
             .header("Referer", BILI_REFERER)
+            .header("Cookie", cookie)
             .send()
             .await
             .map_err(|e| e.to_string())?
@@ -106,24 +115,34 @@ impl BiliMusicClient {
             .and_then(|v| v.as_u64())
             .ok_or("响应缺少 cid (无分 P)")?;
 
+        // 取实际播放音质 (复用 playurl 选流逻辑; 匿名时回落到标准 AAC)
+        let quality = match self.audio_url(bvid, cid, cookie).await {
+            Ok(a) => a.quality,
+            Err(_) => "标准音质".to_string(),
+        };
+
         Ok(BiliResolve {
             sname,
             sartist,
             duration,
             cover_url,
             cid,
+            quality,
         })
     }
 
-    /// 取 DASH 音频直链 (带宽最高者, 失败回退 flac)
-    pub async fn audio_url(&self, bvid: &str, cid: u64) -> Result<String, String> {
-        let mixin = self.mixin_key().await?;
+    /// 取最高品质音频直链. 优先级: Hi-Res (dolby.flac) > 无损 FLAC > 杜比 > 最高 AAC
+    ///
+    /// `fnval=4048` 才会下发 flac / dolby 流, 且这些无损/杜比流通常需要登录态 cookie,
+    /// 未登录时退化为最高 AAC (192k).
+    pub async fn audio_url(&self, bvid: &str, cid: u64, cookie: &str) -> Result<BiliAudio, String> {
+        let mixin = self.mixin_key(cookie).await?;
         let params = vec![
             ("bvid".to_string(), bvid.to_string()),
             ("cid".to_string(), cid.to_string()),
-            ("qn".to_string(), "64".to_string()),
-            ("fnval".to_string(), "16".to_string()),
-            ("fourk".to_string(), "0".to_string()),
+            ("qn".to_string(), "127".to_string()),
+            ("fnval".to_string(), "4048".to_string()),
+            ("fourk".to_string(), "1".to_string()),
             ("platform".to_string(), "web".to_string()),
         ];
         let query = sign(params, &mixin);
@@ -134,6 +153,7 @@ impl BiliMusicClient {
             .get(&url)
             .header("User-Agent", DEFAULT_UA)
             .header("Referer", BILI_REFERER)
+            .header("Cookie", cookie)
             .send()
             .await
             .map_err(|e| e.to_string())?
@@ -151,28 +171,57 @@ impl BiliMusicClient {
 
         let dash = body.pointer("/data/dash").ok_or("响应缺少 dash 字段")?;
 
-        // 优先取带宽最高的 DASH 音频流
-        if let Some(audio) = dash.get("audio").and_then(|a| a.as_array()) {
-            if let Some(best) = audio
-                .iter()
-                .max_by_key(|v| v.get("bandwidth").and_then(|b| b.as_u64()).unwrap_or(0))
-            {
-                if let Some(u) = best.get("baseUrl").and_then(|v| v.as_str()) {
-                    return Ok(u.to_string());
-                }
-            }
-        }
-
-        // 回退: 无损 flac 音频
-        if let Some(flac) = dash
-            .get("flac")
-            .and_then(|f| f.get("audio"))
-            .and_then(|a| a.get("baseUrl"))
-            .and_then(|v| v.as_str())
-        {
-            return Ok(flac.to_string());
+        if let Some((url, quality)) = best_audio_url(dash) {
+            return Ok(BiliAudio { url, quality });
         }
 
         Err("未找到可用音频流".to_string())
     }
+}
+
+/// 从 DASH 节点选出最高品质音频直链与其音质标签.
+///
+/// 返回 `(直链, 音质标签)`, 优先级 (高 -> 低):
+/// 1. `dash.dolby.flac`  -- Hi-Res 无损
+/// 2. `dash.flac.audio`  -- FLAC 无损
+/// 3. `dash.dolby.audio` -- 杜比全景声
+/// 4. `dash.audio` 中带宽最高的 AAC
+fn best_audio_url(dash: &serde_json::Value) -> Option<(String, String)> {
+    let pick = |node: &serde_json::Value| -> Option<String> {
+        node.get("baseUrl")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string())
+            .or_else(|| {
+                node.get("backupUrl")
+                    .and_then(|a| a.as_array())
+                    .and_then(|a| a.first())
+                    .and_then(|v| v.as_str())
+                    .map(|s| s.to_string())
+            })
+    };
+
+    // 1. Hi-Res 无损
+    if let Some(u) = pick(dash.pointer("/dolby/flac").unwrap_or(&serde_json::Value::Null)) {
+        return Some((u, "Hi-Res 无损".to_string()));
+    }
+    // 2. 无损 FLAC
+    if let Some(u) = pick(dash.pointer("/flac/audio").unwrap_or(&serde_json::Value::Null)) {
+        return Some((u, "FLAC 无损".to_string()));
+    }
+    // 3. 杜比全景声
+    if let Some(u) = pick(dash.pointer("/dolby/audio").unwrap_or(&serde_json::Value::Null)) {
+        return Some((u, "杜比全景声".to_string()));
+    }
+    // 4. 最高带宽 AAC
+    if let Some(audio) = dash.get("audio").and_then(|a| a.as_array()) {
+        if let Some(best) = audio
+            .iter()
+            .max_by_key(|v| v.get("bandwidth").and_then(|b| b.as_u64()).unwrap_or(0))
+        {
+            if let Some(u) = pick(best) {
+                return Some((u, "标准音质 192k".to_string()));
+            }
+        }
+    }
+    None
 }

@@ -33,6 +33,17 @@ function qqCoverUrl(albummid?: string): string | undefined {
     return `https://y.gtimg.cn/music/photo_new/T002R300x300M000${albummid}.jpg`;
 }
 
+/** 将统一音质档映射为人类可读标签 (网易云 / QQ 通用, 实际可能因会员降级). */
+function requestedQualityLabel(): string {
+    switch (settings.audioQuality()) {
+        case "standard": return "标准";
+        case "exhigh": return "极高";
+        case "lossless": return "无损";
+        case "hires": return "Hi-Res";
+        default: return "极高";
+    }
+}
+
 /** 网易云音乐服务. */
 export const neteaseService: MusicService & {
     getSongDetail(sid: string | number): Promise<Partial<SongInfo> | null>;
@@ -62,6 +73,7 @@ export const neteaseService: MusicService & {
                 duration: (s.dt ?? s.duration ?? 0) / 1000,
                 coverUrl: s.al?.picUrl || s.album?.picUrl || undefined,
                 albumName: s.al?.name || s.album?.name || undefined,
+                quality: requestedQualityLabel(),
             }));
         } catch (err) {
             console.warn("[wy] 搜索失败:", err);
@@ -203,6 +215,7 @@ export const qqService: MusicService & {
                 sartist: s.singer[0]?.name ?? "",
                 duration: s.interval,
                 coverUrl: qqCoverUrl(s.albummid),
+                quality: requestedQualityLabel(),
             }));
         } catch (err) {
             console.warn("[qq] 搜索失败:", err);
@@ -280,6 +293,7 @@ export const qqService: MusicService & {
                 sartist: s.singer[0]?.name ?? "",
                 duration: s.interval,
                 coverUrl: qqCoverUrl(s.albummid),
+                quality: requestedQualityLabel(),
             }));
         } catch (err) {
             console.warn("[qq] 取「我喜欢」失败:", err);
@@ -309,6 +323,7 @@ export const biliService: MusicService = {
                 duration: data.duration,
                 coverUrl: data.coverUrl,
                 albumName: "B站",
+                quality: data.quality,
             };
             return limit >= 1 ? [song] : [];
         } catch (err) {

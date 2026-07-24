@@ -45,9 +45,10 @@ async fn resolve(
     Query(q): Query<BvidQuery>,
 ) -> ApiResult<Json<serde_json::Value>> {
     let bvid = q.bvid.ok_or_else(|| ApiError::bad("缺少 bvid 参数"))?;
+    let cookie = state.bili_cookie_snapshot();
     let r = state
         .bili_music
-        .resolve(&bvid)
+        .resolve(&bvid, &cookie)
         .await
         .map_err(ApiError::upstream)?;
     Ok(Json(json!({
@@ -56,6 +57,7 @@ async fn resolve(
         "sartist": r.sartist,
         "duration": r.duration,
         "coverUrl": r.cover_url,
+        "quality": r.quality,
         "bvid": bvid,
     })))
 }
@@ -70,20 +72,22 @@ async fn stream(
         None => return (StatusCode::BAD_REQUEST, "缺少 bvid 参数").into_response(),
     };
 
-    let resolved = match state.bili_music.resolve(&bvid).await {
+    let cookie = state.bili_cookie_snapshot();
+    let resolved = match state.bili_music.resolve(&bvid, &cookie).await {
         Ok(r) => r,
         Err(e) => return (StatusCode::BAD_GATEWAY, e).into_response(),
     };
-    let audio_url = match state.bili_music.audio_url(&bvid, resolved.cid).await {
-        Ok(u) => u,
+    let audio = match state.bili_music.audio_url(&bvid, resolved.cid, &cookie).await {
+        Ok(a) => a,
         Err(e) => return (StatusCode::BAD_GATEWAY, e).into_response(),
     };
 
     let mut req = state
         .http
-        .get(&audio_url)
+        .get(&audio.url)
         .header("User-Agent", DEFAULT_UA)
-        .header("Referer", BILI_REFERER);
+        .header("Referer", BILI_REFERER)
+        .header("Cookie", cookie);
     if let Some(range) = headers.get("range") {
         req = req.header("Range", range);
     }
