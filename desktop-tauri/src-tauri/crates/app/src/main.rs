@@ -110,7 +110,6 @@ fn run_app() {
                     write_log("[main] 用户选择最小化到托盘");
                 }
             });
-            let handle_quit = app.handle().clone();
             app.listen("exit-choice-quit", move |_| {
                 write_log("[main] 用户选择直接退出");
                 std::process::exit(0);
