@@ -69,7 +69,7 @@ export interface SongListHistoryItem {
     listName: string;
 }
 
-const [musicPlatform, setMusicPlatform] = createSignal<Platform>(loadJSON(K.musicPlatform, "wy") as Platform);
+const [musicPlatform, setMusicPlatform] = createSignal<Platform>((loadJSON(K.musicPlatform, "wy") as Platform) === "bili" ? "wy" : (loadJSON(K.musicPlatform, "wy") as Platform));
 const [danmuPlatform, setDanmuPlatform] = createSignal<DanmuPlatform>(loadJSON(K.danmuPlatform, "bilibili") as DanmuPlatform);
 const [danmuMode, setDanmuMode] = createSignal<DanmuMode>(loadJSON(K.danmuMode, "room") as DanmuMode);
 const [roomId, setRoomId] = createSignal<string>(loadJSON(K.roomId, ""));
