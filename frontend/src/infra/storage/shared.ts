@@ -57,8 +57,39 @@ export const SHARED_KEYS: readonly string[] = [
 ];
 const SHARED_SET = new Set<string>(SHARED_KEYS);
 
+/** 导入配置后写入的一次性标记: 下次启动的 hydrate 应跳过后端覆盖, 以本地导入值为准. */
+const HYDRATE_SKIP_KEY = "__ordersong_skip_hydrate_once";
+
+/** 标记下一次启动跳过后端配置回写 (导入配置后调用) . */
+export function markSkipHydrateOnce(): void {
+    try {
+        localStorage.setItem(HYDRATE_SKIP_KEY, "1");
+    } catch {
+        /* ignore */
+    }
+}
+
+/** 若存在标记则消费之并返回 true (调用方应跳过本次 hydrate 覆盖) . */
+function consumeSkipHydrateOnce(): boolean {
+    try {
+        const v = localStorage.getItem(HYDRATE_SKIP_KEY);
+        if (v) {
+            localStorage.removeItem(HYDRATE_SKIP_KEY);
+            return true;
+        }
+    } catch {
+        /* ignore */
+    }
+    return false;
+}
+
 /** 应用启动时拉取后端共享配置并写回本地. */
 export async function hydrateFromSharedConfig(): Promise<boolean> {
+    if (consumeSkipHydrateOnce()) {
+        // 刚导入过配置: 信任本地 localStorage 的导入值, 不再被后端存量配置覆盖.
+        hydrated = true;
+        return true;
+    }
     let serverHad: Record<string, string | null> = {};
     let ok = false;
     try {

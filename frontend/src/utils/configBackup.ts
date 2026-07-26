@@ -11,6 +11,7 @@
  */
 
 import { appConfigApi } from "@/api/appConfig";
+import { markSkipHydrateOnce } from "@/infra/storage/shared";
 import { pushToast } from "@/utils/toast";
 import { invoke, isTauri } from "@/infra/tauri/invoke";
 
@@ -108,8 +109,9 @@ export function parseConfig(text: string): Record<string, string> {
         raw.data && typeof raw.data === "object" ? raw.data : raw;
     const out: Record<string, string> = {};
     for (const [k, v] of Object.entries(src)) {
-        if (typeof k === "string" && k.startsWith(PREFIX) && typeof v === "string") {
-            out[k] = v;
+        if (typeof k === "string" && k.startsWith(PREFIX) && v !== undefined && v !== null) {
+            // 非字符串 (如手搓 JSON 里的数字/布尔/对象) 自动序列化, 避免被静默丢弃
+            out[k] = typeof v === "string" ? v : JSON.stringify(v);
         }
     }
     return out;
@@ -119,6 +121,8 @@ export function parseConfig(text: string): Record<string, string> {
 export async function applyImportedConfig(map: Record<string, string>): Promise<number> {
     const keys = Object.keys(map);
     for (const k of keys) localStorage.setItem(k, map[k]);
+    // 标记下次启动跳过后端配置覆盖, 保证刚导入的本地值不被 hydrate 用旧值回写
+    markSkipHydrateOnce();
     try {
         await appConfigApi.patch(map);
     } catch {
