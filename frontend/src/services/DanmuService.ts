@@ -5,13 +5,14 @@
 import { BiliOpenClient } from "@/infra/danmu/BiliOpenClient";
 import { BiliWebClient } from "@/infra/danmu/BiliWebClient";
 import type { DanmuClient } from "@/infra/danmu/DanmuClient";
-import { parseControlCommand, parseOrderCommand } from "@/domain/danmu/command";
+import { parseControlCommand, parseDeleteCommand, parseOrderCommand } from "@/domain/danmu/command";
 import { getMusic, PLATFORMS } from "@/services/MusicService";
 import { handleDanmuOrder } from "@/services/QueueService";
 import { playFirstIfNeeded, playNext } from "@/services/PlayerService";
 import { queue } from "@/stores/queue";
 import { settings } from "@/stores/settings";
 import { session } from "@/stores/session";
+import { pushLiveNotice } from "@/stores/notice";
 import { audioPlayer } from "@/infra/audio/AudioPlayer";
 import { pushToast } from "@/utils/toast";
 import type { DanmuMessage } from "@/types/danmu";
@@ -111,6 +112,41 @@ async function onDanmuMessage(msg: DanmuMessage): Promise<void> {
         if (control === "pause") audioPlayer.pause();
         else audioPlayer.play();
     }
+
+    const del = parseDeleteCommand(text);
+    if (del) {
+        handleDanmuDelete(msg, del.index, isAdmin);
+        return;
+    }
+}
+
+/**
+ * 弹幕删除点播: 普通观众只能删自己点播的等待队列第 N 首, 主播可删等待队列中任意第 N 首.
+ *
+ * 下标语义: orderList()[0] 为当前正在播放, 永远不可被"删除"删除 (只有"切歌"才会切掉) .
+ * 因此 `删除 N` 一律针对等待队列 (orderList().slice(1)), 即第 N 首等待中的歌.
+ *
+ * - `index < 1` 或目标不存在 → 不做任何处理, 不提示 (无事发生) .
+ * - 删除的歌不会是当前播放项, 故仅调用 `queue.removeById` 移除, 不触发切歌.
+ * - 删除成功时推送一条主播端 toast (与点歌成功一致, 带出用户名) .
+ */
+function handleDanmuDelete(msg: DanmuMessage, index: number, isAdmin: boolean): void {
+    if (index < 1) return;
+    const waiting = queue.orderList().slice(1); // 排除当前正在播放 (index 0)
+    const candidates = isAdmin
+        ? waiting
+        : waiting.filter((x) => String(x.uid) === String(msg.uid));
+    const target = candidates[index - 1];
+    if (!target) return; // 下标不存在, 无事发生
+
+    queue.removeById(target.id);
+
+    const uname = msg.uname || "观众";
+    const tail = target.song.sartist
+        ? `${target.song.sname} - ${target.song.sartist}`
+        : target.song.sname;
+    pushToast(`@${uname} 删除歌曲成功: ${tail}`, "success");
+    pushLiveNotice(`@${uname} 删除歌曲成功: ${tail}`, "success", 5000);
 }
 
 window.addEventListener("beforeunload", () => {

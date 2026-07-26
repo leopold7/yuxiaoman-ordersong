@@ -139,6 +139,7 @@ export function AboutSection() {
                 <li><code>点歌 歌名</code> / <code>来一首 歌名</code> / <code>我要听 歌名</code></li>
                 <li><code>点歌 wy 歌名</code>（指定网易云）/ <code>点歌 qq 歌名</code>（指定 QQ）/ <code>点歌 BV1CfTQ6uEqk</code>（指定 B站）</li>
                 <li><code>切歌</code>（仅本人 / 空闲歌单 / 主播可切）</li>
+                <li><code>删除 你点播的第n首歌</code><code>（仅本人 / 主播可删）</code></li>
                 <li><code>暂停</code> / <code>播放</code>（仅主播）</li>
             </ul>
 

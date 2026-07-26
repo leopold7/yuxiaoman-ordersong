@@ -24,6 +24,25 @@ export interface OrderCommand {
 /** 解析"切歌 / 暂停 / 播放"等控制命令的类型. */
 export type ControlCommand = "skip" | "pause" | "play" | null;
 
+/** 解析"删除 / 删除 N"命令的结果. */
+export interface DeleteCommand {
+    /** 第几首 (1-based, 缺省为 1) . */
+    index: number;
+}
+
+/**
+ * 解析"删除 / 删除 N"命令 (撤销点播) .
+ *
+ * 仅匹配 `删除` 或 `删除 <数字>`; 其它写法 (如 `删除啊`) 返回 null.
+ * 数字缺省为 1; 解析到的数字非有限时回退为 1 (调用方对 < 1 判为无效) .
+ */
+export function parseDeleteCommand(text: string): DeleteCommand | null {
+    const m = text.trim().match(/^删除\s*(\d*)$/);
+    if (!m) return null;
+    const idx = m[1] === "" ? 1 : parseInt(m[1], 10);
+    return { index: Number.isFinite(idx) ? idx : 1 };
+}
+
 /**
  * 用配置的触发词集合解析一条弹幕文本.
  *
