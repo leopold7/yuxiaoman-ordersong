@@ -195,6 +195,36 @@
 .number:hover, .number:focus { border-color: #40a4d8; }
 .unit { font-size: 12px; color: #7b8194; }
 
+/* 滑块 */
+.slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 150px;
+    height: 4px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.14);
+    outline: none;
+    cursor: pointer;
+}
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #40a4d8;
+    border: 2px solid #fff;
+    cursor: pointer;
+}
+.slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #40a4d8;
+    border: 2px solid #fff;
+    cursor: pointer;
+}
+
 /* 颜色选择 */
 .colorWrap { display: flex; align-items: center; gap: 8px; }
 .color {

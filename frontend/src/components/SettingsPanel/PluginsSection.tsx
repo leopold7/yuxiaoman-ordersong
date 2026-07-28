@@ -8,6 +8,7 @@
  */
 import { widgetSettings, updateWidgetSettings } from "@/stores/widgetSettings";
 import { pushToast } from "@/utils/toast";
+import { invoke, isTauri } from "@/infra/tauri/invoke";
 import styles from "./SettingsPanel.module.css";
 
 const OBS_BASE = "http://127.0.0.1:17777";
@@ -21,6 +22,20 @@ async function copyWidgetUrl() {
     } catch {
         pushToast("复制失败，请手动选中复制", "warn");
     }
+}
+
+async function openAdminPage() {
+    if (isTauri()) {
+        try {
+            await invoke("open_widget_admin");
+        } catch (e) {
+            const msg = typeof e === "string" ? e : ((e as Error)?.message ?? JSON.stringify(e));
+            pushToast(`打开管理页失败：${msg}`, "error");
+        }
+        return;
+    }
+    // 非 Tauri 环境 (纯前端 dev) 直接新标签打开
+    window.open(ADMIN_URL, "_blank");
 }
 
 export function PluginsSection() {
@@ -48,16 +63,21 @@ export function PluginsSection() {
                     <button
                         type="button"
                         class={styles.shortcutBtn}
-                        onClick={() => window.open(ADMIN_URL, "_blank")}
+                        onClick={() => void openAdminPage()}
                         title="在浏览器中打开 Widget 管理页面，编辑外观并实时预览"
                     >
                         打开管理页面
                     </button>
                     <span />
                 </div>
-                <div class={styles.row}>
+                <div class={styles.rowWide}>
                     <label>OBS 地址</label>
-                    <input type="text" readOnly value={WIDGET_URL} onFocus={(e) => e.currentTarget.select()} />
+                    <textarea
+                        class={styles.urlBox}
+                        readOnly
+                        rows={2}
+                        onFocus={(e) => e.currentTarget.select()}
+                    >{WIDGET_URL}</textarea>
                     <button type="button" class={styles.linkBtn} onClick={() => void copyWidgetUrl()}>
                         复制
                     </button>

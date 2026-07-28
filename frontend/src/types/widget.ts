@@ -32,6 +32,8 @@ export interface WidgetSettings {
     theme: number;
     /** 主色 */
     tint_color: string;
+    /** 宽度占比: 卡片宽度占 OBS 浏览器源宽度的百分比 (30-100) */
+    width_ratio: number;
 }
 
 /** 默认值与 now-playing-service Settings.java 保持一致 */
@@ -48,7 +50,8 @@ export const DEFAULT_WIDGET_SETTINGS: WidgetSettings = {
     hide_delay: 10,
     player: 0,
     theme: 0,
-    tint_color: "#40a4d8"
+    tint_color: "#40a4d8",
+    width_ratio: 90
 };
 
 /** 封面样式选项（管理页下拉） */

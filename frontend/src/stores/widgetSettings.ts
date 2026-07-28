@@ -3,8 +3,8 @@
  *
  * - 主窗口「插件设置」tab 与网页管理页 (?view=widget-admin) 写入: updateWidgetSettings()
  * - 持久化: localStorage + 后端共享配置镜像（key 已加入 SHARED_KEYS 白名单）
- * - OBS 浏览器源 (?view=widget) 读取: startWidgetSettingsPoll() 周期从后端共享配置拉取,
- *   实现管理页修改后 widget 视图即时生效（跨窗口/进程同步）
+ * - OBS 浏览器源 (?view=widget) 读取: loadWidgetSettingsFromServer() 页面加载时从后端共享配置拉取一次,
+ *   实现管理页修改后刷新 OBS 源即生效（跨窗口/进程同步）
  */
 
 import { createSignal } from "solid-js";
@@ -44,27 +44,24 @@ export function reloadWidgetSettingsFromStorage(): void {
     );
 }
 
-let pollTimer: ReturnType<typeof setInterval> | null = null;
+let serverLoaded = false;
 
 /**
- * widget 视图专用: 周期从后端共享配置拉取最新设置。
- * 管理页在其他窗口/浏览器修改后, 约 intervalMs 内生效。
+ * widget 视图（OBS 浏览器源，独立进程）加载时调用一次：从后端共享配置拉取最新 widget 设置。
+ * 仅在页面加载时拉取一次；管理页改动会镜像到后端，需刷新 OBS 浏览器源生效，避免频繁轮询 /app-config。
  */
-export function startWidgetSettingsPoll(intervalMs = 2000): void {
-    if (pollTimer) return;
-    const tick = async () => {
-        try {
-            const { data } = await appConfigApi.fetch();
-            const raw = data?.[WIDGET_SETTINGS_KEY];
-            if (typeof raw !== "string") return;
-            const next = normalize(JSON.parse(raw) as Partial<WidgetSettings>);
-            if (JSON.stringify(next) !== JSON.stringify(widgetSettings())) {
-                setWidgetSettingsSignal(next);
-            }
-        } catch {
-            /* 网络异常静默, 下轮重试 */
+export async function loadWidgetSettingsFromServer(): Promise<void> {
+    if (serverLoaded) return;
+    serverLoaded = true;
+    try {
+        const { data } = await appConfigApi.fetch();
+        const raw = data?.[WIDGET_SETTINGS_KEY];
+        if (typeof raw !== "string") return;
+        const next = normalize(JSON.parse(raw) as Partial<WidgetSettings>);
+        if (JSON.stringify(next) !== JSON.stringify(widgetSettings())) {
+            setWidgetSettingsSignal(next);
         }
-    };
-    void tick();
-    pollTimer = setInterval(() => void tick(), intervalMs);
+    } catch {
+        /* 网络异常静默, 保留本地值 */
+    }
 }

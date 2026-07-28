@@ -10,5 +10,6 @@ commands.allow = [
     "close_qq_login",
     "open_bili_live_settings",
     "open_bili_qr_login",
+    "open_widget_admin",
     "close_bili_live_settings",
 ]

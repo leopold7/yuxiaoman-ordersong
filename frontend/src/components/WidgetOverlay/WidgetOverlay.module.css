@@ -19,8 +19,8 @@
 
 .card {
     position: relative;
-    width: 28em;
-    max-width: 94%;
+    width: 90%;
+    max-width: 100%;
     border-radius: 1.4em;
     padding: 1.5em 1.7em;
     overflow: hidden;
@@ -28,7 +28,6 @@
     transition: opacity 0.4s ease, transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .cardMini {
-    width: 21em;
     padding: 1em 1.2em;
     border-radius: 1.1em;
 }
@@ -65,6 +64,9 @@
 .blurBg {
     position: absolute;
     inset: -2.5em;
+    width: calc(100% + 5em);
+    height: calc(100% + 5em);
+    object-fit: cover;
     background-size: cover;
     background-position: center;
     filter: blur(1.8em) saturate(1.2);
@@ -105,6 +107,14 @@
     height: 3.2em;
 }
 .coverCircle { border-radius: 50%; }
+/* 圆形封面: 播放时封面持续转圈（黑胶效果）, 暂停时停转 */
+.coverCircle img {
+    animation: coverSpin 8s linear infinite;
+}
+.coverPaused img { animation-play-state: paused; }
+@keyframes coverSpin {
+    to { transform: rotate(360deg); }
+}
 .coverGlow {
     box-shadow:
         0 0 1.4em var(--tint),
@@ -148,6 +158,45 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+/* 文本承载于内部 .marqueeTrack: 默认省略号, 圆形封面且溢出时无缝循环滚动 */
+.title > .marqueeTrack,
+.artist > .marqueeTrack {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+}
+.title > .marqueeTrack > .marqueeItem,
+.artist > .marqueeTrack > .marqueeItem {
+    display: inline-block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: top;
+}
+/* 非滚动态: 仅显示首份, 隐藏第二份 (避免重复) */
+.title:not(.marquee) > .marqueeTrack > .marqueeItem:last-child,
+.artist:not(.marquee) > .marqueeTrack > .marqueeItem:last-child {
+    display: none;
+}
+/* 滚动态: 双份内容无缝循环, 固定较慢速度 */
+/* 关键: .marqueeTrack 必须按内容宽度收缩(width: max-content),
+   否则 translateX(-50%) 以"容器宽"为基准而非"内容宽", 循环到末尾会突跳回起点造成卡顿 */
+.marquee > .marqueeTrack {
+    display: inline-block;
+    width: max-content;
+    overflow: visible;
+    animation: marqueeLoop 14s linear infinite;
+    will-change: transform;
+}
+.marquee > .marqueeTrack > .marqueeItem {
+    overflow: visible;
+    text-overflow: clip;
+    padding-right: 2.5em;
+}
+@keyframes marqueeLoop {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
 }
 .cardMini .title { font-size: 1.02em; }
 .cardMini .artist { font-size: 0.85em; }

@@ -94,6 +94,7 @@ fn run_app() {
             webview_login::close_qq_login,
             browser::open_bili_live_settings,
             browser::open_bili_qr_login,
+            browser::open_widget_admin,
             browser::close_bili_live_settings,
             write_text_file,
             read_text_file,

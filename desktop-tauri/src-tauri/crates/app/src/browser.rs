@@ -43,6 +43,15 @@ pub async fn open_bili_qr_login(_app: AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+/// 打开 Widget 管理页面 (正在播放挂件外观编辑页), 在系统浏览器中编辑并实时预览.
+#[tauri::command]
+pub async fn open_widget_admin(_app: AppHandle) -> Result<(), String> {
+    let url = "http://127.0.0.1:17777/order/?view=widget-admin";
+    open_in_default_browser(url)?;
+    write_log("[widget-admin] 已用系统浏览器打开管理页面");
+    Ok(())
+}
+
 /// 兼容旧前端: 用系统浏览器后不需要"关闭", 做成 no-op.
 #[tauri::command]
 pub async fn close_bili_live_settings(_app: AppHandle) -> Result<(), String> {

@@ -8,6 +8,7 @@
 import { Show, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import { liveState, smoothCurrentTime } from "@/stores/liveState";
 import { widgetSettings } from "@/stores/widgetSettings";
+import { DEFAULT_WIDGET_SETTINGS } from "@/types/widget";
 import styles from "./WidgetOverlay.module.css";
 
 function fmtTime(sec: number): string {
@@ -55,6 +56,50 @@ function useDominantColor(coverUrl: () => string | undefined) {
     return color;
 }
 
+/**
+ * 长文本滚动（跑马灯）
+ * - 圆形封面(active)且文本溢出时, 双份内容无缝循环滚动; 否则退化为 CSS 省略号
+ */
+function ScrollText(props: { text: string; class?: string; title?: string; active: boolean }) {
+    let outer: HTMLDivElement | undefined;
+    let firstItem: HTMLSpanElement | undefined;
+    const [scrolling, setScrolling] = createSignal(false);
+    // 滚动时长: 与内容宽度成正比 => 任意长度都保持匀速 (~22px/s)
+    const [duration, setDuration] = createSignal(20);
+
+    createEffect(() => {
+        props.text; // 跟踪文本变化
+        const active = props.active;
+        // 等 DOM 重绘后再测宽度
+        requestAnimationFrame(() => {
+            if (!outer || !firstItem) return;
+            const delta = firstItem.scrollWidth - outer.clientWidth;
+            const overflow = active && delta > 1;
+            setScrolling(overflow);
+            if (overflow) {
+                // 一份内容的宽度 / 速度 = 滚动一整轮所需秒数
+                setDuration(Math.max(8, firstItem.scrollWidth / 22));
+            }
+        });
+    });
+
+    return (
+        <div
+            class={`${props.class} ${scrolling() ? styles.marquee : ""}`}
+            title={props.title}
+            ref={outer}
+        >
+            <div
+                class={styles.marqueeTrack}
+                style={scrolling() ? { "animation-duration": `${duration()}s` } : undefined}
+            >
+                <span class={styles.marqueeItem} ref={firstItem}>{props.text}</span>
+                <span class={styles.marqueeItem} aria-hidden="true">{props.text}</span>
+            </div>
+        </div>
+    );
+}
+
 export function WidgetOverlay(props: { preview?: boolean }) {
     const s = widgetSettings;
 
@@ -63,6 +108,16 @@ export function WidgetOverlay(props: { preview?: boolean }) {
     const coverUrl = createMemo(() => now()?.coverUrl || undefined);
     const title = createMemo(() => now()?.sname || "暂无播放");
     const artist = createMemo(() => now()?.sartist || "等待点歌…");
+    const uname = createMemo(() => {
+        const u = now()?.uname || "";
+        // 空闲歌单补歌时不显示点播人
+        return u === "空闲歌单" ? "" : u;
+    });
+    // 歌手行: 有则点播人, 形如 "歌手 · 点播人"
+    const artistText = createMemo(() => {
+        const u = uname();
+        return u ? `${artist()} · ${u}` : artist();
+    });
     const songKey = createMemo(() => {
         const n = now();
         return n ? `${n.sname}|${n.sartist}` : "";
@@ -136,16 +191,20 @@ export function WidgetOverlay(props: { preview?: boolean }) {
     });
     onCleanup(() => { clearHide(); clearCut(); });
 
-    // -- 自适应字号: 以容器尺寸为基准, em 布局整体缩放 --
+    // -- 自适应字号: 以"默认宽度占比"对应的参考宽度为基准, 与实时 width_ratio 解耦 --
+    // 这样 width_ratio 只控制卡片的横向宽度, 不会让整个组件(封面/文字/均衡器)随之缩放。
+    const refRatio = DEFAULT_WIDGET_SETTINGS.width_ratio;
     let wrapEl: HTMLDivElement | undefined;
+    let cardEl: HTMLDivElement | undefined;
     const [fs, setFs] = createSignal(16);
     onMount(() => {
         const compute = () => {
             if (!wrapEl) return;
-            const w = wrapEl.clientWidth;
+            // 参考宽度 = 外层舞台宽度 × 默认占比, 不随用户调节的 width_ratio 变化
+            const w = wrapEl.clientWidth * (refRatio / 100);
             const h = wrapEl.clientHeight;
             if (w <= 0 || h <= 0) return;
-            setFs(Math.max(8, Math.min(64, Math.min(w / 32, h / 12))));
+            setFs(Math.max(8, Math.min(64, Math.min(w / 30, h / 12))));
         };
         compute();
         const ro = new ResizeObserver(compute);
@@ -170,10 +229,16 @@ export function WidgetOverlay(props: { preview?: boolean }) {
                         s().player === 2 ? styles.cardMini : "",
                         visible() ? "" : styles.hidden
                     ].join(" ")}
-                    style={{ "font-size": `${fs()}px`, "--tint": accent() }}
+                    ref={cardEl}
+                    style={{ "font-size": `${fs()}px`, "--tint": accent(), width: `${s().width_ratio}%` }}
                 >
                     <Show when={s().cover_blur && coverUrl()}>
-                        <div class={styles.blurBg} style={{ "background-image": `url(${coverUrl()})` }} />
+                        <img
+                            class={styles.blurBg}
+                            src={coverUrl()}
+                            alt=""
+                            referrerPolicy="no-referrer"
+                        />
                         <div class={styles.blurMask} />
                     </Show>
                     <div class={styles.inner}>
@@ -183,7 +248,8 @@ export function WidgetOverlay(props: { preview?: boolean }) {
                                     class={[
                                         styles.coverBox,
                                         s().cover === 1 ? styles.coverCircle : "",
-                                        s().cover_glow ? styles.coverGlow : ""
+                                        s().cover_glow ? styles.coverGlow : "",
+                                        playing() ? "" : styles.coverPaused
                                     ].join(" ")}
                                 >
                                     <Show
@@ -195,8 +261,8 @@ export function WidgetOverlay(props: { preview?: boolean }) {
                                 </div>
                             </Show>
                             <div class={styles.text}>
-                                <div class={styles.title} title={title()}>{title()}</div>
-                                <div class={styles.artist} title={artist()}>{artist()}</div>
+                                <ScrollText class={styles.title} text={title()} title={title()} active={s().cover === 1} />
+                                <ScrollText class={styles.artist} text={artistText()} title={artistText()} active={s().cover === 1} />
                             </div>
                             <Show when={!s().hide_equalizer}>
                                 <div class={`${styles.eq} ${playing() ? "" : styles.eqPaused}`}>
@@ -215,7 +281,7 @@ export function WidgetOverlay(props: { preview?: boolean }) {
                                     <div class={styles.fill} style={{ width: `${percent()}%` }} />
                                 </div>
                                 <span class={styles.timeText}>
-                                    {duration() > 0 ? `-${fmtTime(Math.max(0, duration() - current()))}` : "0:00"}
+                                    {duration() > 0 ? fmtTime(duration()) : "0:00"}
                                 </span>
                             </div>
                         </Show>

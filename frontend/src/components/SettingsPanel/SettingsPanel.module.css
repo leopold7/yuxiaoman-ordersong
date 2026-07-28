@@ -204,6 +204,41 @@
 }
 .linkBtn:hover { color: var(--accent); background: var(--bg-2); }
 
+/* OBS 地址整行：label 在上方，地址框占满整行并可换行完整显示 */
+.rowWide {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+        "label btn"
+        "url  url";
+    gap: 6px;
+    margin: 8px 0;
+}
+.rowWide > label {
+    grid-area: label;
+    color: var(--text-1);
+    font-size: 13px;
+}
+.rowWide > .linkBtn { grid-area: btn; }
+.urlBox {
+    grid-area: url;
+    width: 100%;
+    box-sizing: border-box;
+    resize: none;
+    font-family: var(--font-mono, monospace);
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-1);
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 10px;
+    word-break: break-all;
+    overflow-wrap: anywhere;
+    user-select: text;
+}
+.urlBox:focus { outline: none; border-color: var(--accent); }
+
 /* OBS 浏览器源 - 直播叠加层 子分组 */
 .subSection {
     margin: 8px 0 4px;

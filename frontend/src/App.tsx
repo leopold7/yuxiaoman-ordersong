@@ -10,7 +10,7 @@ import { ListOverlay } from "./components/ListOverlay/ListOverlay";
 import { AudioBridge } from "./components/AudioBridge/AudioBridge";
 import { WidgetOverlay } from "./components/WidgetOverlay/WidgetOverlay";
 import { WidgetAdminPage } from "./components/WidgetAdmin/WidgetAdminPage";
-import { startWidgetSettingsPoll, reloadWidgetSettingsFromStorage } from "./stores/widgetSettings";
+import { loadWidgetSettingsFromServer, reloadWidgetSettingsFromStorage } from "./stores/widgetSettings";
 import { OnboardingModal } from "./components/OnboardingModal/OnboardingModal";
 import { ExitChoiceModal } from "./components/ExitChoiceModal/ExitChoiceModal";
 import { BiliQrLogin } from "./components/BiliQrLogin/BiliQrLogin";
@@ -257,9 +257,9 @@ export function App() {
     }
 
     if (ENV.VIEW === "widget") {
-        // 正在播放挂件 (OBS 浏览器源): 播放快照轮询 + 外观设置轮询（管理页修改后即时生效）
+        // 正在播放挂件 (OBS 浏览器源): 播放快照轮询 + 加载时一次性拉取外观设置（避免频繁轮询 /app-config）
         startLiveStatePoll();
-        startWidgetSettingsPoll();
+        void loadWidgetSettingsFromServer();
         return <WidgetOverlay />;
     }
 

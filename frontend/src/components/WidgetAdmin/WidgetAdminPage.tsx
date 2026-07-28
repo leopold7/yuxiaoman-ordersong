@@ -102,6 +102,34 @@ function NumberRow(props: {
     );
 }
 
+function SliderRow(props: {
+    label: string;
+    value: number;
+    min: number;
+    max: number;
+    step?: number;
+    unit?: string;
+    onChange: (v: number) => void;
+}) {
+    return (
+        <label class={styles.row}>
+            <span class={styles.rowText}>
+                <span class={styles.rowLabel}>{props.label}</span>
+                <span class={styles.rowDesc}>{props.value}{props.unit ?? ""}</span>
+            </span>
+            <input
+                class={styles.slider}
+                type="range"
+                min={props.min}
+                max={props.max}
+                step={props.step ?? 1}
+                value={props.value}
+                onInput={(e) => props.onChange(+e.currentTarget.value)}
+            />
+        </label>
+    );
+}
+
 export function WidgetAdminPage() {
     const s = widgetSettings;
 
@@ -136,6 +164,15 @@ export function WidgetAdminPage() {
                             desc="关闭后 widget 页面不显示任何内容"
                             checked={s().enabled}
                             onChange={(v) => updateWidgetSettings({ enabled: v })}
+                        />
+                        <SliderRow
+                            label="宽度占比"
+                            desc="卡片宽度占 OBS 浏览器源宽度的百分比"
+                            value={s().width_ratio}
+                            min={30}
+                            max={100}
+                            unit="%"
+                            onChange={(v) => updateWidgetSettings({ width_ratio: v })}
                         />
                         <SelectRow
                             label="主题"
