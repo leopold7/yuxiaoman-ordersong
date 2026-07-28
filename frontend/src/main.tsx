@@ -4,7 +4,7 @@ import "./styles/global.css";
 
 {
     const view = new URLSearchParams(window.location.search).get("view")?.toLowerCase();
-    if (view === "stream" || view === "lyrics" || view === "list" || view === "audio") {
+    if (view === "stream" || view === "lyrics" || view === "list" || view === "audio" || view === "widget") {
         document.documentElement.classList.add("overlay-view");
         document.body.classList.add("overlay-view");
     }

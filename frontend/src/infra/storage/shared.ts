@@ -49,6 +49,8 @@ export const SHARED_KEYS: readonly string[] = [
     "v3.obs.showNotice",
     // 关闭方式 (缓存配置共享)
     "v3.closeMethod",
+    // Widget 插件 (正在播放挂件) 外观设置
+    "v3.widget.settings",
     // 名单 / 历史
     "v3.userBlackList",
     "v3.songBlackList",

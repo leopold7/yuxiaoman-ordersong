@@ -8,6 +8,9 @@ import { ThemeColorPicker } from "./components/ThemeColorPicker/ThemeColorPicker
 import { StreamOverlay } from "./components/StreamOverlay/StreamOverlay";
 import { ListOverlay } from "./components/ListOverlay/ListOverlay";
 import { AudioBridge } from "./components/AudioBridge/AudioBridge";
+import { WidgetOverlay } from "./components/WidgetOverlay/WidgetOverlay";
+import { WidgetAdminPage } from "./components/WidgetAdmin/WidgetAdminPage";
+import { startWidgetSettingsPoll, reloadWidgetSettingsFromStorage } from "./stores/widgetSettings";
 import { OnboardingModal } from "./components/OnboardingModal/OnboardingModal";
 import { ExitChoiceModal } from "./components/ExitChoiceModal/ExitChoiceModal";
 import { BiliQrLogin } from "./components/BiliQrLogin/BiliQrLogin";
@@ -158,8 +161,11 @@ export function App() {
     // 启动时直接从共享配置拉取主题色/主题, 保证即使主程序尚未推送也能显示客户端设置的主题色
     createEffect(() => {
         const v = ENV.VIEW;
-        if (v === "lyrics" || v === "stream" || v === "list" || v === "audio") {
-            void hydrateFromSharedConfig().then(() => reloadSettingsFromStorage());
+        if (v === "lyrics" || v === "stream" || v === "list" || v === "audio" || v === "widget" || v === "widget-admin") {
+            void hydrateFromSharedConfig().then(() => {
+                reloadSettingsFromStorage();
+                reloadWidgetSettingsFromStorage();
+            });
         }
     });
 
@@ -167,7 +173,7 @@ export function App() {
         // 系统级全局快捷键（窗口失焦 / 最小化也能触发）：注册并随设置变化自动同步
         initGlobalShortcut();
 
-        if (ENV.VIEW === "lyrics" || ENV.VIEW === "stream" || ENV.VIEW === "list" || ENV.VIEW === "audio") return;
+        if (ENV.VIEW === "lyrics" || ENV.VIEW === "stream" || ENV.VIEW === "list" || ENV.VIEW === "audio" || ENV.VIEW === "widget" || ENV.VIEW === "widget-admin") return;
         await hydrateFromSharedConfig();
         reloadSettingsFromStorage();
         // 恢复上次保存的音量 (否则每次打开都回到最大)
@@ -248,6 +254,24 @@ export function App() {
         // 更高频轮询, 让换源 / 播停感知更及时
         startLiveStatePoll(300);
         return <AudioBridge />;
+    }
+
+    if (ENV.VIEW === "widget") {
+        // 正在播放挂件 (OBS 浏览器源): 播放快照轮询 + 外观设置轮询（管理页修改后即时生效）
+        startLiveStatePoll();
+        startWidgetSettingsPoll();
+        return <WidgetOverlay />;
+    }
+
+    if (ENV.VIEW === "widget-admin") {
+        // widget 网页管理页: 拉播放快照供实时预览; 设置由本页编辑并镜像到共享配置
+        startLiveStatePoll();
+        return (
+            <>
+                <Toast />
+                <WidgetAdminPage />
+            </>
+        );
     }
 
     const hasCode = () => !!(ENV.ANCHOR_CODE || settings.anchorCode());
