@@ -104,6 +104,7 @@ function NumberRow(props: {
 
 function SliderRow(props: {
     label: string;
+    desc?: string;
     value: number;
     min: number;
     max: number;
@@ -115,6 +116,9 @@ function SliderRow(props: {
         <label class={styles.row}>
             <span class={styles.rowText}>
                 <span class={styles.rowLabel}>{props.label}</span>
+                <Show when={props.desc}>
+                    <span class={styles.rowDesc}>{props.desc}</span>
+                </Show>
                 <span class={styles.rowDesc}>{props.value}{props.unit ?? ""}</span>
             </span>
             <input
