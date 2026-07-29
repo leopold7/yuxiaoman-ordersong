@@ -38,3 +38,5 @@ Thumbs.db
 # ---- 杂项 ----
 *.tsbuildinfo
 website/
+
+.codebuddy/

@@ -276,6 +276,12 @@ export function WidgetAdminPage() {
                                 onChange={(v) => updateWidgetSettings({ visible_duration: v })}
                             />
                         </Show>
+                        <SwitchRow
+                            label="开启切歌弹出动画"
+                            desc="首次进入或切换歌曲时，整个组件缓慢弹出"
+                            checked={s().cut_popup}
+                            onChange={(v) => updateWidgetSettings({ cut_popup: v })}
+                        />
                     </div>
                 </section>
 

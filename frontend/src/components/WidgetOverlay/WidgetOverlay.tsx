@@ -191,6 +191,21 @@ export function WidgetOverlay(props: { preview?: boolean }) {
     });
     onCleanup(() => { clearHide(); clearCut(); });
 
+    // -- 切歌弹出动画: cut_popup 开启时, 首次出现 / 切换歌曲对整卡触发缓慢弹出 --
+    const [popupOn, setPopupOn] = createSignal(false);
+    let prevPopupKey = "";
+    createEffect(() => {
+        const key = songKey();
+        if (key && key !== prevPopupKey) {
+            prevPopupKey = key;
+            if (s().cut_popup) {
+                // 先移除再下一帧添加, 借助 Solid 重算 class 重放动画
+                setPopupOn(false);
+                requestAnimationFrame(() => setPopupOn(true));
+            }
+        }
+    });
+
     // -- 自适应字号: 以"默认宽度占比"对应的参考宽度为基准, 与实时 width_ratio 解耦 --
     // 这样 width_ratio 只控制卡片的横向宽度, 不会让整个组件(封面/文字/均衡器)随之缩放。
     const refRatio = DEFAULT_WIDGET_SETTINGS.width_ratio;
@@ -227,7 +242,8 @@ export function WidgetOverlay(props: { preview?: boolean }) {
                         styles.card,
                         themeClass(),
                         s().player === 2 ? styles.cardMini : "",
-                        visible() ? "" : styles.hidden
+                        visible() ? "" : styles.hidden,
+                        popupOn() ? styles.cardPopup : ""
                     ].join(" ")}
                     ref={cardEl}
                     style={{ "font-size": `${fs()}px`, "--tint": accent(), width: `${s().width_ratio}%` }}
@@ -262,7 +278,7 @@ export function WidgetOverlay(props: { preview?: boolean }) {
                             </Show>
                             <div class={styles.text}>
                                 <ScrollText class={styles.title} text={title()} title={title()} active={s().cover === 1} />
-                                <ScrollText class={styles.artist} text={artistText()} title={artistText()} active={s().cover === 1} />
+                                <ScrollText class={styles.artist} text={artistText()} title={artistText()} active={false} />
                             </div>
                             <Show when={!s().hide_equalizer}>
                                 <div class={`${styles.eq} ${playing() ? "" : styles.eqPaused}`}>

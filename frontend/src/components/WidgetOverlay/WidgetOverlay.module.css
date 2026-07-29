@@ -31,6 +31,14 @@
     padding: 1em 1.2em;
     border-radius: 1.1em;
 }
+/* 切歌弹出动画: 整个卡片缓慢缩放 + 淡入（开启 cut_popup 时由 JS 触发, animationend 后移除 class） */
+.cardPopup {
+    animation: cardPopup 0.9s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+@keyframes cardPopup {
+    from { opacity: 0; transform: scale(0.85) translateY(0.8em); }
+    to   { opacity: 1; transform: none; }
+}
 .hidden {
     opacity: 0;
     transform: scale(0.72) translateY(0.8em);

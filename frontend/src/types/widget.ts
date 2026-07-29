@@ -18,6 +18,8 @@ export interface WidgetSettings {
     song_change_only: boolean;
     /** 切歌显示持续秒数（song_change_only 生效时） */
     visible_duration: number;
+    /** 开启切歌弹出动画（首次进入/切换歌曲时整个组件缓慢弹出） */
+    cut_popup: boolean;
     /** 取封面主色做主题色 */
     player_colors: boolean;
     /** 隐藏均衡器动画 */
@@ -44,6 +46,7 @@ export const DEFAULT_WIDGET_SETTINGS: WidgetSettings = {
     hide_on_pause: false,
     song_change_only: false,
     visible_duration: 5,
+    cut_popup: false,
     player_colors: true,
     hide_equalizer: false,
     cover: 0,
