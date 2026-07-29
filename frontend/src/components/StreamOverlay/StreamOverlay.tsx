@@ -44,6 +44,12 @@ export function StreamOverlay() {
 
     const upcoming = () => liveState().queue.slice(0, 3);
 
+    // 歌词占位文案: B 站播放时不显示"纯音乐", 直接隐藏
+    const placeholderText = () => {
+        if (liveState().lyricsLoading) return "歌词加载中…";
+        return liveState().now?.platform === "bili" ? "" : "♪ 纯音乐 ♪";
+    };
+
     const fallbackLogo = `${import.meta.env.BASE_URL}logo.png`;
     return (
         <div class={styles.wrap}>
@@ -108,7 +114,7 @@ export function StreamOverlay() {
             <Show when={ENV.SHOW_LYRICS}>
             <div>
                 <div class={styles.lyricLine}>
-                    <Show when={activeLine()} fallback={<span class={styles.placeholder}>{liveState().lyricsLoading ? "歌词加载中…" : "♪ 纯音乐 ♪"}</span>}>
+                    <Show when={activeLine()} fallback={<span class={styles.placeholder}>{placeholderText()}</span>}>
                         {(l) => <span>{l().text}</span>}
                     </Show>
                 </div>

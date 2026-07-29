@@ -18,6 +18,9 @@ export function LyricView(props: Props) {
     const activeIdx = (): number => (props.obs ? liveState().activeIdx : ctrlActiveIdx());
     const hasNow = () => (props.obs ? !!liveState().now : !!queue.orderList()[0]);
     const loading = () => (props.obs ? liveState().lyricsLoading : ctrlLyricLoading());
+    // 当前播放平台: B 站播放时不显示"纯音乐"
+    const nowPlatform = (): string =>
+        props.obs ? (liveState().now?.platform ?? "") : (queue.orderList()[0]?.song.platform ?? "");
 
     const lineH = props.obs ? LINE_HEIGHT_OBS : LINE_HEIGHT_PANEL;
     const offset = createMemo(() => {
@@ -27,7 +30,8 @@ export function LyricView(props: Props) {
     });
     const emptyText = () => {
         if (loading()) return "歌词加载中…";
-        return hasNow() ? "纯音乐" : "暂无播放";
+        if (!hasNow()) return "暂无播放";
+        return nowPlatform() === "bili" ? "" : "纯音乐";
     };
 
     return (

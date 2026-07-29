@@ -39,7 +39,8 @@ export function ListOverlay() {
     const lyricText = (): string => {
         if (activeLine()) return activeLine();
         if (liveState().lyricsLoading) return "歌词加载中…";
-        return now() ? "纯音乐" : "";
+        // B 站播放时不显示"纯音乐", 直接隐藏
+        return now() ? (now()!.platform === "bili" ? "" : "纯音乐") : "";
     };
 
     let boxRef: HTMLDivElement | undefined;
