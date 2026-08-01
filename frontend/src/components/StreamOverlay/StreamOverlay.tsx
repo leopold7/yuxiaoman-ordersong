@@ -49,6 +49,9 @@ export function StreamOverlay() {
         if (liveState().lyricsLoading) return "歌词加载中…";
         return liveState().now?.platform === "bili" ? "" : "♪ 纯音乐 ♪";
     };
+    // B 站纯音乐场景: placeholder 为空串, 此时连外层遮罩容器一起隐藏, 避免残留半透明背景
+    const hideLyricMask = () =>
+        activeLine() == null && placeholderText() === "";
 
     const fallbackLogo = `${import.meta.env.BASE_URL}logo.png`;
     return (
@@ -112,16 +115,16 @@ export function StreamOverlay() {
 
             {/* 滚动歌词 */}
             <Show when={ENV.SHOW_LYRICS}>
-            <div>
+            <Show when={!hideLyricMask()}>
                 <div class={styles.lyricLine}>
                     <Show when={activeLine()} fallback={<span class={styles.placeholder}>{placeholderText()}</span>}>
                         {(l) => <span>{l().text}</span>}
                     </Show>
                 </div>
-                <Show when={nextLine()}>
-                    {(l) => <div class={styles.lyricNext}>{l().text}</div>}
-                </Show>
-            </div>
+            </Show>
+            <Show when={nextLine()}>
+                {(l) => <div class={styles.lyricNext}>{l().text}</div>}
+            </Show>
             </Show>
 
             {/* 下一首预告 */}
