@@ -1,6 +1,6 @@
 import { Show, createSignal } from "solid-js";
 import { neteaseService, qqService } from "@/services/MusicService";
-import { saveWyCookie, saveQqCookie, session } from "@/stores/session";
+import { saveWyCookie, saveQqCookie, loadWyLoginAt, loadQqLoginAt, session } from "@/stores/session";
 import { pushToast } from "@/utils/toast";
 import { invoke, isTauri } from "@/infra/tauri/invoke";
 import styles from "./SettingsPanel.module.css";
@@ -122,6 +122,14 @@ export function LoginSection() {
         setQqStatus("");
     };
 
+    /** 距抓取 Cookie 经过的天数 (不足 1 天按 1 天算); 无时间戳返回 null (旧版 cookie 不显示) */
+    const loggedDays = (loginAt: number | null): number | null => {
+        if (loginAt == null) return null;
+        const diff = Date.now() - loginAt;
+        const days = Math.ceil(diff / 86400000);
+        return days < 1 ? 1 : days;
+    };
+
     const note = (text: string) => (
         <div style={{
             "font-size": "13px",
@@ -154,7 +162,10 @@ export function LoginSection() {
                         fallback={
                             <div class={styles.row}>
                                 <label>状态</label>
-                                <div>已登录 {session.login().netease.nickname && <b>({session.login().netease.nickname})</b>}</div>
+                                <div>已登录 {session.login().netease.nickname && <b>({session.login().netease.nickname})</b>}{(() => {
+                                    const d = loggedDays(loadWyLoginAt());
+                                    return d == null ? null : <span> / {d}天</span>;
+                                })()}</div>
                                 <button onClick={logoutWy}>退出</button>
                             </div>
                         }
@@ -184,7 +195,10 @@ export function LoginSection() {
                         fallback={
                             <div class={styles.row}>
                                 <label>状态</label>
-                                <div>已登录 <b>(QQ 音乐)</b></div>
+                                <div>已登录 <b>(QQ 音乐)</b>{(() => {
+                                    const d = loggedDays(loadQqLoginAt());
+                                    return d == null ? null : <span> / {d}天</span>;
+                                })()}</div>
                                 <button onClick={logoutQq}>退出</button>
                             </div>
                         }

@@ -14,6 +14,10 @@ const K_QQ_COOKIE = "v3.qq.cookie";
 const K_BILI_COOKIE = "v3.bili.cookie";
 const K_BILI_USER = "v3.bili.user"; // { mid, uname, avatar } JSON
 
+// 抓取 Cookie 时的时间戳 (毫秒), 用于展示「已登录 N 天」。旧版无此键则不显示。
+const K_WY_LOGIN_AT = "v3.wy.loginAt";
+const K_QQ_LOGIN_AT = "v3.qq.loginAt";
+
 const [adminUid, setAdminUid] = createSignal<string | number>(0);
 
 const [login, setLogin] = createSignal<LoginState>({
@@ -45,11 +49,15 @@ const [songHistory, setSongHistory] = createSignal<{ sid: string | number; sname
 export async function saveWyCookie(cookie: string) {
     if (!cookie) {
         removeKey(K_WY_COOKIE);
+        removeKey(K_WY_LOGIN_AT);
         return;
     }
     const enc = await encryptText(cookie);
+    const ts = String(Date.now());
     localStorage.setItem(K_WY_COOKIE, enc);
+    localStorage.setItem(K_WY_LOGIN_AT, ts);
     mirrorToServer(K_WY_COOKIE, enc);
+    mirrorToServer(K_WY_LOGIN_AT, ts);
 }
 
 export async function loadWyCookie(): Promise<string> {
@@ -58,20 +66,38 @@ export async function loadWyCookie(): Promise<string> {
     return decryptText(raw);
 }
 
+/** 抓取网易云 Cookie 的时间戳 (毫秒), 无则返回 null */
+export function loadWyLoginAt(): number | null {
+    const raw = localStorage.getItem(K_WY_LOGIN_AT);
+    const n = raw ? Number(raw) : NaN;
+    return Number.isFinite(n) ? n : null;
+}
+
 export async function saveQqCookie(cookie: string) {
     if (!cookie) {
         removeKey(K_QQ_COOKIE);
+        removeKey(K_QQ_LOGIN_AT);
         return;
     }
     const enc = await encryptText(cookie);
+    const ts = String(Date.now());
     localStorage.setItem(K_QQ_COOKIE, enc);
+    localStorage.setItem(K_QQ_LOGIN_AT, ts);
     mirrorToServer(K_QQ_COOKIE, enc);
+    mirrorToServer(K_QQ_LOGIN_AT, ts);
 }
 
 export async function loadQqCookie(): Promise<string> {
     const raw = localStorage.getItem(K_QQ_COOKIE);
     if (!raw) return "";
     return decryptText(raw);
+}
+
+/** 抓取 QQ 音乐 Cookie 的时间戳 (毫秒), 无则返回 null */
+export function loadQqLoginAt(): number | null {
+    const raw = localStorage.getItem(K_QQ_LOGIN_AT);
+    const n = raw ? Number(raw) : NaN;
+    return Number.isFinite(n) ? n : null;
 }
 
 export async function saveBiliCookie(cookie: string) {

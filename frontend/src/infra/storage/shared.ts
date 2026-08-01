@@ -19,6 +19,9 @@ export const SHARED_KEYS: readonly string[] = [
     "v3.qq.cookie",
     "v3.bili.cookie",
     "v3.bili.user",
+    // 抓取 Cookie 时间戳 (用于展示「已登录 N 天」, 随登录态一并导入导出与跨客户端同步)
+    "v3.wy.loginAt",
+    "v3.qq.loginAt",
     // 平台 / 身份码 / 设置
     "v3.musicPlatform",
     "v3.danmuPlatform",
