@@ -42,6 +42,11 @@ export const SHARED_KEYS: readonly string[] = [
     "v3.showLyrics",
     "v3.theme",
     "v3.accentColor",
+    // 快捷键 / 淡入淡出 / 音量 (纯 localStorage 会因换安装/WebView 用户数据目录变更而丢失, 需镜像到后端)
+    "v3.shortcutPausePlay",
+    "v3.fadeEnabled",
+    "v3.fadeDuration",
+    "v3.volume",
     // OBS 浏览器源 - 直播叠加层显示开关
     "v3.obs.showSongCard",
     "v3.obs.showScrollLyrics",
