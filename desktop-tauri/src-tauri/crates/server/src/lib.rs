@@ -24,6 +24,7 @@ pub mod state;
 
 use std::sync::Arc;
 
+use axum::http::{header, HeaderValue, Request};
 use axum::Router;
 use ordersong_core::consts::REQUEST_BODY_LIMIT;
 use tokio::net::TcpListener;
@@ -33,6 +34,21 @@ use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
 
 pub use state::{AppState, AppStateRef};
+
+/// 带内容指纹的构建产物: 文件名变了才会被请求, 可以放心长期缓存
+const IMMUTABLE_CACHE: &str = "public, max-age=31536000, immutable";
+/// 入口文档: 允许协商缓存, 但每次都必须回源校验
+const NO_CACHE: &str = "no-cache, must-revalidate";
+
+/// 判断该路径是否是 Vite 产出的带 hash 指纹的静态资源
+///
+/// Vite 默认把带 hash 的产物放在 `assets/` 下 (形如 `index-a1b2c3d4.js`),
+/// 只有这类文件才适用 immutable 长缓存; 其余 (尤其是 `index.html` 与目录索引)
+/// 必须回源校验, 否则覆盖安装升级后 WebView2 会拿旧 `index.html` 去引用
+/// 已经不存在的旧 hash chunk, 界面表现为「还是旧版本」甚至白屏
+fn is_fingerprinted(path: &str) -> bool {
+    path.contains("/assets/")
+}
 
 /// 构造完整的 axum Router
 pub fn build_router(state: AppStateRef) -> Router {
@@ -61,7 +77,19 @@ pub fn build_router(state: AppStateRef) -> Router {
 
     let dist = ordersong_core::paths::pick_frontend_dist();
     eprintln!("[server] 静态资源目录：{}", dist.display());
-    let static_service = ServeDir::new(&dist).append_index_html_on_directories(true);
+    // 只给静态资源加缓存头, 不经过 api_router / health_router, 避免影响接口响应
+    let static_service = tower::ServiceBuilder::new()
+        .layer(axum::middleware::from_fn(
+            |req: Request<axum::body::Body>, next: axum::middleware::Next| async move {
+                let immutable = is_fingerprinted(req.uri().path());
+                let mut res = next.run(req).await;
+                let v = if immutable { IMMUTABLE_CACHE } else { NO_CACHE };
+                res.headers_mut()
+                    .insert(header::CACHE_CONTROL, HeaderValue::from_static(v));
+                res
+            },
+        ))
+        .service(ServeDir::new(&dist).append_index_html_on_directories(true));
 
     let health_router = health::router().with_state(state.clone());
 

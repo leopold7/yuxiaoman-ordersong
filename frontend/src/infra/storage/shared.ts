@@ -4,8 +4,12 @@
  * 启动时 [`hydrateFromSharedConfig`] 拉取后端配置并写回本地 localStorage;
  * 任意变更时 [`mirrorToServer`] 防抖批量上送.
  *
- * 关键设计: hydrate 完成 (或失败兜底) 之前 `mirrorToServer` 直接静默丢弃,
+ * 关键设计 1: hydrate 完成 (或失败兜底) 之前 `mirrorToServer` 直接静默丢弃,
  * 避免 `createEffect` 首发的默认值赶在 hydrate 之前把别的客户端的真实配置覆盖.
+ *
+ * 关键设计 2 (覆盖安装升级): hydrate 按 **key 存在性** 合并, 后端存在该 key 才写回本地,
+ * 后端没有的 key 保留新版本代码里的默认值. 这样升级后「用户改过的设置保留, 新增字段用新默认值」,
+ * 不再需要卸载重装 (手动删 `%APPDATA%/ordersong/shared-config.json`) 才能看到新内容.
  */
 
 import { appConfigApi } from "@/api/appConfig";
@@ -108,6 +112,11 @@ export async function hydrateFromSharedConfig(): Promise<boolean> {
             serverHad = data;
             ok = true;
             for (const k of SHARED_KEYS) {
+                // 覆盖安装升级的关键: 后端只作为「用户显式改过的值」的来源, 不是全量真源.
+                // 后端没有这个 key (例如本版本新增的设置项) 时必须跳过, 保留本地
+                // 也就是新版本代码里的默认值; 否则新默认值会被存量配置冲掉,
+                // 用户就得卸载重装 (手动删 shared-config.json) 才能看到新内容.
+                if (!Object.prototype.hasOwnProperty.call(data, k)) continue;
                 const v = data[k];
                 if (typeof v === "string") {
                     try {
