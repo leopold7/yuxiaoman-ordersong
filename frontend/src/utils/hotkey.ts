@@ -10,13 +10,13 @@ const MOD_CODES = new Set([
  * 把 KeyboardEvent.code 映射为 muda（Tauri 全局快捷键底层）接受的物理键名。
  *
  * 注意：muda 的键名与浏览器 e.code 并不完全一致——最典型的是小键盘减号：
- *   e.code="NumpadSubtract" 但 muda 只认 "NUMPADSUB"，
- *   若直接 toUpperCase 成 "NUMPADSUBTRACT"，Rust 端解析失败，
- *   注册回调桥接时会抛 `Cannot read properties of undefined (reading 'transformCallback')`。
+ *   e.code="NumpadSubtract"，而 muda 只认 "NUMPADSUBTRACT"（或 "NUMSUBTRACT"），
+ *   并不接受 "NUMPADSUB"（旧版本误用，会导致 Rust 端解析失败，报
+ *   `Couldn't recognize "NUMPADSUB" as a valid key for hotkey`）。
  * 这里仅对不一致的小键盘键做显式映射，其余键沿用 e.code 大写（KEY*、DIGIT*、ARROW*、SPACE 等格式均被 muda 接受）。
  */
 const CODE_TO_MUDA: Record<string, string> = {
-    NumpadSubtract: "NUMPADSUB",
+    NumpadSubtract: "NUMPADSUBTRACT",
     NumpadAdd: "NUMPADADD",
     NumpadDecimal: "NUMPADDECIMAL",
     NumpadDivide: "NUMPADDIVIDE",
@@ -25,7 +25,7 @@ const CODE_TO_MUDA: Record<string, string> = {
 };
 
 /**
- * 键盘事件 -> Tauri 全局快捷键格式字符串，如 "Ctrl+Space" / "Ctrl+Shift+A" / "Ctrl+NUMPADSUB"。
+ * 键盘事件 -> Tauri 全局快捷键格式字符串，如 "Ctrl+Space" / "Ctrl+Shift+A" / "Ctrl+NUMPADSUBTRACT"。
  * 裸修饰键返回 null（不记录）。
  *
  * 主键名取自 `e.code`（物理键位，与键盘布局无关），再经 CODE_TO_MUDA 转成 muda 接受的名称。
