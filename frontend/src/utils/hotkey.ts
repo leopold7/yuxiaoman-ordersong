@@ -7,16 +7,28 @@ const MOD_CODES = new Set([
 ]);
 
 /**
- * 键盘事件 -> Tauri 全局快捷键格式字符串，如 "Ctrl+Space" / "Ctrl+Shift+A" / "Ctrl+NUMPADSUBTRACT"。
+ * 把 KeyboardEvent.code 映射为 muda（Tauri 全局快捷键底层）接受的物理键名。
+ *
+ * 注意：muda 的键名与浏览器 e.code 并不完全一致——最典型的是小键盘减号：
+ *   e.code="NumpadSubtract" 但 muda 只认 "NUMPADSUB"，
+ *   若直接 toUpperCase 成 "NUMPADSUBTRACT"，Rust 端解析失败，
+ *   注册回调桥接时会抛 `Cannot read properties of undefined (reading 'transformCallback')`。
+ * 这里仅对不一致的小键盘键做显式映射，其余键沿用 e.code 大写（KEY*、DIGIT*、ARROW*、SPACE 等格式均被 muda 接受）。
+ */
+const CODE_TO_MUDA: Record<string, string> = {
+    NumpadSubtract: "NUMPADSUB",
+    NumpadAdd: "NUMPADADD",
+    NumpadDecimal: "NUMPADDECIMAL",
+    NumpadDivide: "NUMPADDIVIDE",
+    NumpadMultiply: "NUMPADMULTIPLY",
+    NumpadEnter: "NUMPADENTER",
+};
+
+/**
+ * 键盘事件 -> Tauri 全局快捷键格式字符串，如 "Ctrl+Space" / "Ctrl+Shift+A" / "Ctrl+NUMPADSUB"。
  * 裸修饰键返回 null（不记录）。
  *
- * 关键点：主键名取自 `e.code`（物理键位，与键盘布局无关），其大写形式正好等于
- * Tauri(底层 muda) 解析器接受的键名，例如：
- *   - 小键盘减号 e.code="NumpadSubtract" -> "NUMPADSUBTRACT"
- *   - 主键盘减号 e.code="Minus"          -> "MINUS"
- *   - 空格 e.code="Space"                -> "SPACE"
- *   - 方向键 e.code="ArrowUp"            -> "ARROWUP"
- * 若改用 e.key，小键盘减号会得到 "-"，而 "-" 不是合法键名，导致注册失败。
+ * 主键名取自 `e.code`（物理键位，与键盘布局无关），再经 CODE_TO_MUDA 转成 muda 接受的名称。
  *
  * 该格式供 @tauri-apps/plugin-global-shortcut 注册使用。
  */
@@ -29,7 +41,7 @@ export function formatCombo(e: KeyboardEvent): string | null {
     if (e.shiftKey) mods.push("Shift");
     if (e.metaKey) mods.push("Meta"); // Windows 上对应 Win 键
 
-    const main = e.code.toUpperCase();
+    const main = CODE_TO_MUDA[e.code] ?? e.code.toUpperCase();
 
     return [...mods, main].join("+");
 }
@@ -65,7 +77,10 @@ const DISPLAY_MAP: Record<string, string> = {
     PERIOD: ".",
     SLASH: "/",
     BACKQUOTE: "`",
+    // 展示用：e.code 长名（兼容从旧版本读取的已存储组合）
     NUMPADSUBTRACT: "小键盘-",
+    // 注册用：muda 实际键名（当前生成的格式）
+    NUMPADSUB: "小键盘-",
     NUMPADADD: "小键盘+",
     NUMPADDECIMAL: "小键盘.",
     NUMPADDIVIDE: "小键盘/",
