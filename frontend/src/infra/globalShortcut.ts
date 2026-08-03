@@ -2,6 +2,7 @@ import { createEffect } from "solid-js";
 import { register, unregister } from "@tauri-apps/plugin-global-shortcut";
 import { togglePlayback } from "@/services/PlayerService";
 import { settings } from "@/stores/settings";
+import { ENV } from "@/config/env";
 import { pushToast } from "@/utils/toast";
 import { formatComboDisplay } from "@/utils/hotkey";
 
@@ -58,7 +59,10 @@ async function apply(): Promise<void> {
         } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
             console.error("[global-shortcut] 注册失败:", combo, e);
-            pushToast(`全局快捷键注册失败：${formatComboDisplay(combo)} — ${msg}`, "error", 8000);
+            // 仅客户端主页面（full/compact）弹提示；直播叠加层等 OBS 页面面向观众，静默处理
+            if (ENV.VIEW === "full" || ENV.VIEW === "compact") {
+                pushToast(`全局快捷键注册失败：${formatComboDisplay(combo)} — ${msg}`, "error", 8000);
+            }
         }
     } finally {
         syncing = false;
