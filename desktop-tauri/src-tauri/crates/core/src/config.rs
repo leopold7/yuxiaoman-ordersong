@@ -80,30 +80,10 @@ fn as_u64(v: &Option<serde_yaml::Value>) -> Option<u64> {
     })
 }
 
-/// 读取并解析一个 yaml 配置文件, 不存在或解析失败都回退成空配置
-fn read_raw(path: &PathBuf) -> RawConfig {
-    if !path.exists() {
-        return RawConfig::default();
-    }
-    match fs::read_to_string(path) {
-        Ok(s) => serde_yaml::from_str(&s).unwrap_or_else(|e| {
-            eprintln!("[core::config] {} 解析失败 ({e}), 按空配置处理", path.display());
-            RawConfig::default()
-        }),
-        Err(_) => RawConfig::default(),
-    }
-}
-
 /// 从磁盘 + 环境变量加载配置, 读取失败时回退默认值, 不会 panic
 ///
-/// 字段优先级 (从高到低): 环境变量 -> 用户 `config.yaml` -> `default/config.yaml` -> 内置默认值
-///
-/// 这里按 **字段** 而非整文件回退: 覆盖安装升级时用户的 `config.yaml` 会保留,
-/// 若只在文件缺失时才复制默认配置, 新版本新增的配置项就永远读不到.
-/// 逐字段回退后, 用户改过的字段保留, 新增字段自动取新版 `default/config.yaml` 的值.
-///
-/// 副作用: 若 config.yaml 缺失而 config/default/config.yaml 存在, 会尝试复制一份.
-/// perMachine 安装到 Program Files 时无写权限, 复制失败属预期情况, 不影响读取.
+/// 副作用: 若 config.yaml 缺失而 config/default/config.yaml 存在,
+/// 会把默认配置复制为 config.yaml
 pub fn load() -> AppConfig {
     let cfg_dir = paths::pick_config_dir();
     let yaml_path: PathBuf = cfg_dir.join("config.yaml");
@@ -111,61 +91,51 @@ pub fn load() -> AppConfig {
 
     if !yaml_path.exists() && default_yaml.exists() {
         let _ = fs::create_dir_all(&cfg_dir);
-        match fs::copy(&default_yaml, &yaml_path) {
-            Ok(_) => eprintln!("[core::config] 已从默认配置生成 {}", yaml_path.display()),
-            // 安装目录只读时属预期, 下面仍会直接读 default/config.yaml, 不影响运行
-            Err(e) => eprintln!(
-                "[core::config] 生成 {} 失败 ({e}), 将直接使用默认配置",
-                yaml_path.display()
-            ),
+        if fs::copy(&default_yaml, &yaml_path).is_ok() {
+            eprintln!("[core::config] 已从默认配置生成 {}", yaml_path.display());
         }
     }
 
-    let raw = read_raw(&yaml_path);
-    let def = read_raw(&default_yaml);
+    let raw: RawConfig = if yaml_path.exists() {
+        match fs::read_to_string(&yaml_path) {
+            Ok(s) => serde_yaml::from_str(&s).unwrap_or_default(),
+            Err(_) => RawConfig::default(),
+        }
+    } else {
+        RawConfig::default()
+    };
 
     AppConfig {
-        access_key_id: env_or("ACCESS_KEY_ID")
-            .or(raw.access_key_id)
-            .or(def.access_key_id)
-            .unwrap_or_default(),
+        access_key_id: env_or("ACCESS_KEY_ID").or(raw.access_key_id).unwrap_or_default(),
         access_key_secret: env_or("ACCESS_KEY_SECRET")
             .or(raw.access_key_secret)
             .or(raw.access_key_secred)
-            .or(def.access_key_secret)
-            .or(def.access_key_secred)
             .unwrap_or_default(),
         bili_app_id: std::env::var("BILI_APP_ID")
             .ok()
             .and_then(|s| s.parse().ok())
             .or(as_u64(&raw.bili_app_id))
-            .or(as_u64(&def.bili_app_id))
             .unwrap_or(0),
         web_server_host: env_or("WEB_SERVER_HOST")
             .or(raw.web_server_host)
-            .or(def.web_server_host)
             .unwrap_or_else(|| consts::DEFAULT_HOST.to_string()),
         web_server_port: std::env::var("WEB_SERVER_PORT")
             .ok()
             .and_then(|s| s.parse().ok())
             .or(raw.web_server_port)
-            .or(def.web_server_port)
             .unwrap_or(consts::DEFAULT_PORT),
         base_path: env_or("BASE_PATH")
             .or(raw.base_path)
-            .or(def.base_path)
             .unwrap_or_else(|| consts::DEFAULT_BASE_PATH.to_string()),
         song_cache_ttl_sec: std::env::var("SONG_CACHE_TTL")
             .ok()
             .and_then(|s| s.parse().ok())
             .or(raw.song_cache_ttl)
-            .or(def.song_cache_ttl)
             .unwrap_or(300),
         rate_limit_per_min: std::env::var("RATE_LIMIT_PER_MIN")
             .ok()
             .and_then(|s| s.parse().ok())
             .or(raw.rate_limit_per_min)
-            .or(def.rate_limit_per_min)
             .unwrap_or(120),
     }
 }
