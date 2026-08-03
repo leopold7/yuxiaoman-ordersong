@@ -6,9 +6,12 @@
  * - 「管理页面」按钮: 跳转网页管理页 ?view=widget-admin
  * - 复制 OBS 浏览器源地址 ?view=widget
  */
+import { Show, createSignal } from "solid-js";
 import { widgetSettings, updateWidgetSettings } from "@/stores/widgetSettings";
+import { enabled as logEnabled, setLogPluginEnabled } from "@/stores/logPlugin";
 import { pushToast } from "@/utils/toast";
 import { invoke, isTauri } from "@/infra/tauri/invoke";
+import { LogViewerModal } from "./LogViewerModal";
 import styles from "./SettingsPanel.module.css";
 
 const OBS_BASE = "http://127.0.0.1:17777";
@@ -39,6 +42,8 @@ async function openAdminPage() {
 }
 
 export function PluginsSection() {
+    const [showLogViewer, setShowLogViewer] = createSignal(false);
+
     return (
         <div class={styles.section}>
             <h3>插件</h3>
@@ -86,6 +91,40 @@ export function PluginsSection() {
                     在 OBS 中添加「浏览器」源并粘贴上方地址（建议 800 × 300），外观在管理页面中修改后自动生效。
                 </p>
             </div>
+
+            <div class={styles.subSection}>
+                <h4>日志</h4>
+                <p class={styles.hint}>
+                    开启后实时采集应用运行日志（拦截全局 console 输出），点击「查看日志」弹出页面在线滚动查看，
+                    支持按级别筛选、关键字搜索、复制与清空。便于排查点歌 / 播放 / 弹幕等异常。
+                </p>
+                <div class={styles.row}>
+                    <label>启用插件</label>
+                    <input
+                        type="checkbox"
+                        checked={logEnabled()}
+                        onChange={(e) => setLogPluginEnabled(e.currentTarget.checked)}
+                    />
+                    <span />
+                </div>
+                <div class={styles.row}>
+                    <label>查看日志</label>
+                    <button
+                        type="button"
+                        class={styles.shortcutBtn}
+                        disabled={!logEnabled()}
+                        onClick={() => setShowLogViewer(true)}
+                        title={logEnabled() ? "弹出日志查看页面" : "请先开启日志插件"}
+                    >
+                        查看日志
+                    </button>
+                    <span />
+                </div>
+            </div>
+
+            <Show when={showLogViewer()}>
+                <LogViewerModal onClose={() => setShowLogViewer(false)} />
+            </Show>
         </div>
     );
 }

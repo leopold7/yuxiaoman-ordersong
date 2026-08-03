@@ -1,6 +1,10 @@
 import { render } from "solid-js/web";
 import { App } from "./App";
+import { installLogCapture } from "./utils/logCapture";
 import "./styles/global.css";
+
+// 全局 console 拦截 (幂等): 采集运行日志供「日志插件」在线查看
+installLogCapture();
 
 {
     const view = new URLSearchParams(window.location.search).get("view")?.toLowerCase();
