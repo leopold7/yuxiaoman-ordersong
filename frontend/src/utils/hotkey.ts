@@ -10,9 +10,7 @@ const MOD_CODES = new Set([
  * 把 KeyboardEvent.code 映射为 muda（Tauri 全局快捷键底层）接受的物理键名。
  *
  * 注意：muda 的键名与浏览器 e.code 并不完全一致——最典型的是小键盘减号：
- *   e.code="NumpadSubtract"，而 muda 只认 "NUMPADSUBTRACT"（或 "NUMSUBTRACT"），
- *   并不接受 "NUMPADSUB"（旧版本误用，会导致 Rust 端解析失败，报
- *   `Couldn't recognize "NUMPADSUB" as a valid key for hotkey`）。
+ *   e.code="NumpadSubtract"，而 muda 只认 "NUMPADSUBTRACT"（或 "NUMSUBTRACT"）。
  * 这里仅对不一致的小键盘键做显式映射，其余键沿用 e.code 大写（KEY*、DIGIT*、ARROW*、SPACE 等格式均被 muda 接受）。
  */
 const CODE_TO_MUDA: Record<string, string> = {
@@ -23,6 +21,30 @@ const CODE_TO_MUDA: Record<string, string> = {
     NumpadMultiply: "NUMPADMULTIPLY",
     NumpadEnter: "NUMPADENTER",
 };
+
+/**
+ * 历史遗留旧别名 -> muda 合法键名。
+ *
+ * 旧版本曾把小键盘减号以简写 "NUMPADSUB" 存进 localStorage（v3.shortcutPausePlay），
+ * 而 muda 只接受全称 "NUMPADSUBTRACT"，直接注册会报
+ * `Couldn't recognize "NUMPADSUB" as a valid key for hotkey`。
+ * 该表仅用于注册前兼容旧数据，与 CODE_TO_MUDA（生成用）方向相反、用途不同。
+ */
+const LEGACY_TO_MUDA: Record<string, string> = {
+    NUMPADSUB: "NUMPADSUBTRACT",
+};
+
+/**
+ * 把组合串（如 "Ctrl+NUMPADSUB"）中遗留的旧键名归一化为 muda 接受的名称（如 "Ctrl+NUMPADSUBTRACT"）。
+ * 未命中映射的 token 原样保留。纯展示以外的注册流程都应先经此函数兼容旧 localStorage 数据。
+ */
+export function normalizeCombo(combo: string): string {
+    if (!combo) return combo;
+    return combo
+        .split("+")
+        .map((t) => LEGACY_TO_MUDA[t.toUpperCase()] ?? t)
+        .join("+");
+}
 
 /**
  * 键盘事件 -> Tauri 全局快捷键格式字符串，如 "Ctrl+Space" / "Ctrl+Shift+A" / "Ctrl+NUMPADSUBTRACT"。
@@ -77,10 +99,8 @@ const DISPLAY_MAP: Record<string, string> = {
     PERIOD: ".",
     SLASH: "/",
     BACKQUOTE: "`",
-    // 展示用：e.code 长名（兼容从旧版本读取的已存储组合）
+    // 展示用：muda 实际键名（当前生成的格式）
     NUMPADSUBTRACT: "小键盘-",
-    // 注册用：muda 实际键名（当前生成的格式）
-    NUMPADSUB: "小键盘-",
     NUMPADADD: "小键盘+",
     NUMPADDECIMAL: "小键盘.",
     NUMPADDIVIDE: "小键盘/",

@@ -4,7 +4,7 @@ import { togglePlayback } from "@/services/PlayerService";
 import { settings } from "@/stores/settings";
 import { ENV } from "@/config/env";
 import { pushToast } from "@/utils/toast";
-import { formatComboDisplay } from "@/utils/hotkey";
+import { formatComboDisplay, normalizeCombo } from "@/utils/hotkey";
 
 /** 当前已注册的组合键（用于变更时先注销旧的） */
 let registeredCombo: string | null = null;
@@ -38,16 +38,19 @@ async function apply(): Promise<void> {
         }
         if (!combo) return;
 
+        // 兼容旧版本 localStorage 中可能存下的简写键名（如 NUMPADSUB -> NUMPADSUBTRACT）
+        const regCombo = normalizeCombo(combo);
+
         // 先尝试注销，避免页面热重载后“已注册”冲突（幂等）
         try {
-            await unregister(combo);
+            await unregister(regCombo);
         } catch {
             /* 忽略：可能本来就没注册成功 */
         }
         registeredCombo = null;
 
         try {
-            await register(combo, (event) => {
+            await register(regCombo, (event) => {
                 // Tauri 在 key-down(Pressed) 与 key-up(Released) 都会回调，
                 // 只处理 Pressed，否则会触发两次（播放后又自动暂停）
                 if (event.state === "Pressed") {
