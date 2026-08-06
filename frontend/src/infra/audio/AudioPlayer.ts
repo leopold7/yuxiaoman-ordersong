@@ -40,6 +40,23 @@ export class AudioPlayer {
         this.audio.addEventListener("error", (e) => this.onError?.(e));
     }
 
+    /**
+     * 统一增益写入入口。
+     * - gainNode 已建立: 先取消残留的 ramp, 再立即 setValueAtTime 落定, 避免被淡入淡出计划值覆盖。
+     * - gainNode 未建立(降级通道): 直接写 audio.volume。
+     * 所有涉及音量的写入都应经此, 保证 audio.volume 与 gain 两条通道不竞争。
+     */
+    private applyGain(target: number): void {
+        const clamped = Math.max(0, Math.min(1, target));
+        if (this.gainNode && this.ctx) {
+            const now = this.ctx.currentTime;
+            this.gainNode.gain.cancelScheduledValues(now);
+            this.gainNode.gain.setValueAtTime(clamped, now);
+        } else {
+            this.audio.volume = clamped;
+        }
+    }
+
     private ensureGraph(): void {
         if (this.ctx) return;
         try {
@@ -49,6 +66,7 @@ export class AudioPlayer {
             this.ctx = new Ctor();
             this.source = this.ctx.createMediaElementSource(this.audio);
             this.gainNode = this.ctx.createGain();
+            // 建立时即以当前 _volume 为准, 避免重启后首次播放钉死在旧值
             this.gainNode.gain.value = this._volume[0]();
             this.source.connect(this.gainNode);
             this.gainNode.connect(this.ctx.destination);
@@ -75,13 +93,7 @@ export class AudioPlayer {
 
     play(): void {
         // 播放前恢复增益到目标音量, 避免曾经淡出到 0 后(尤其关闭淡入淡出时)变无声
-        if (this.gainNode && this.ctx) {
-            const now = this.ctx.currentTime;
-            this.gainNode.gain.cancelScheduledValues(now);
-            this.gainNode.gain.setValueAtTime(this._volume[0](), now);
-        } else {
-            this.audio.volume = this._volume[0]();
-        }
+        this.applyGain(this._volume[0]());
         void this.audio.play();
     }
 
@@ -99,11 +111,8 @@ export class AudioPlayer {
     setVolume(v: number): void {
         const clamped = Math.max(0, Math.min(1, v));
         this._volume[1](clamped);
-        if (this.gainNode) {
-            this.gainNode.gain.value = clamped;
-        } else {
-            this.audio.volume = clamped;
-        }
+        // 立即落定到当前通道; 若 gainNode 尚未建立(降级), 下次 ensureGraph 会用最新 _volume 重建
+        this.applyGain(clamped);
     }
 
     private fadeIn(durationMs = 1500): void {

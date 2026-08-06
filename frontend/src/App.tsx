@@ -153,6 +153,12 @@ export function App() {
         applyAccentColor(settings.accentColor());
     });
 
+    // 音量实时同步: 任何对 settings.volume 的修改 (滑块、共享配置拉取、reload) 都即时落到播放器,
+    // 覆盖 reloadSettingsFromStorage 后仅启动时同步一次带来的缺口, 避免设 0 重启后拖动无反应
+    createEffect(() => {
+        audioPlayer.setVolume(settings.volume());
+    });
+
     createEffect(() => {
         if (danmuNeedCode()) setOnboardingDismissed(false);
     });
