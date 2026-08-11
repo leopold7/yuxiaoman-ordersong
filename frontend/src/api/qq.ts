@@ -49,4 +49,7 @@ export const qqApi = {
     favorite() {
         return api.get<{ data?: { list?: QqSongResp[] } }>(url("/user/favorite"), { timeout: 8000 });
     },
+    playlist(params: { disstid: number | string }) {
+        return api.get<{ data?: { list?: QqSongResp[] }; err?: string; code?: number }>(url("/playlist"), { params });
+    },
 };

@@ -81,10 +81,21 @@ export function OrderSection() {
                     </div>
                     <div class={styles.row}>
                         <label />
-                        <div style={{ "font-size": "12px", color: "var(--text-2)", "line-height": "1.6" }}>
-                            从网易云任意歌单页 URL 里复制 <code>?id=</code> 后面的数字。例如 <br />
-                            <code style={{ "word-break": "break-all" }}>music.163.com/#/playlist?id=<b>7294328248</b></code>
-                        </div>
+                        <Show
+                            when={settings.musicPlatform() === "qq"}
+                            fallback={
+                                <div style={{ "font-size": "12px", color: "var(--text-2)", "line-height": "1.6" }}>
+                                    从网易云任意歌单页 URL 里复制 <code>?id=</code> 后面的数字。例如 <br />
+                                    <code style={{ "word-break": "break-all" }}>music.163.com/#/playlist?id=<b>7294328248</b></code>
+                                </div>
+                            }
+                        >
+                            <div style={{ "font-size": "12px", color: "var(--text-2)", "line-height": "1.6" }}>
+                                从 QQ 音乐歌单页 URL 里复制 <code>disstid</code> / <code>?id=</code> 后面的数字。例如 <br />
+                                <code style={{ "word-break": "break-all" }}>y.qq.com/n/ryqq/playlist/<b>6017822053</b></code><br />
+                                公开歌单可直接加载；你自己的私有歌单需先在「登录」面板填入 QQ cookie。
+                            </div>
+                        </Show>
                         <span />
                     </div>
                     <div class={styles.row}>

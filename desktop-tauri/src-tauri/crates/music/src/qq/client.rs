@@ -118,6 +118,56 @@ impl QqClient {
         json!({ "data": { "list": list } })
     }
 
+    /// 自定义歌单 (按 disstid 拉取). 公开歌单通常无需登录 cookie 即可取详情;
+    /// 传入 cookie 时带登录态, 可访问私有歌单. 取不到返回空列表.
+    pub async fn playlist(&self, disstid: i64, cookie: &str) -> Value {
+        if disstid <= 0 {
+            return json!({ "data": { "list": [] }, "err": "invalid_disstid" });
+        }
+        let uin = parse_qq_uin(cookie);
+        let g_tk = qq_gtk(cookie);
+
+        let payload = json!({
+            "req_1": {
+                "module": "music.srfDissInfo.aiDissInfo",
+                "method": "uniform_get_Dissinfo",
+                "param": { "disstid": disstid, "tag": 0, "userinfo": 0, "song_begin": 0, "song_num": 200 }
+            },
+            "comm": { "ct": 24, "cv": 0, "format": "json", "g_tk": g_tk, "uin": uin }
+        });
+        let data_str = serde_json::to_string(&payload).unwrap_or_default();
+        let mut req = self
+            .http
+            .get("https://u.y.qq.com/cgi-bin/musicu.fcg")
+            .query(&[
+                ("format", "json"),
+                ("g_tk", g_tk.to_string().as_str()),
+                ("data", data_str.as_str()),
+            ])
+            .header("Referer", QQ_REFERER)
+            .header("Origin", "https://y.qq.com");
+        if !cookie.is_empty() {
+            req = req.header("Cookie", cookie);
+        }
+        let body: Value = match req.send().await {
+            Ok(r) => r.json().await.unwrap_or(Value::Null),
+            Err(_) => return json!({ "data": { "list": [] }, "err": "http" }),
+        };
+        let raw = body
+            .pointer("/req_1/data/songlist")
+            .or_else(|| body.pointer("/req_1/data/dirinfo/songs"))
+            .and_then(|v| v.as_array())
+            .cloned()
+            .unwrap_or_default();
+        if raw.is_empty() {
+            // 可能是平台把空歌单与错误合并返回, 透出 err_code 方便前端排查
+            let err_code = body.pointer("/req_1/data/code").and_then(|v| v.as_i64());
+            return json!({ "data": { "list": [] }, "err": "empty_songlist", "code": err_code });
+        }
+        let list: Vec<Value> = raw.iter().filter_map(normalize_song).collect();
+        json!({ "data": { "list": list }, "disstid": disstid })
+    }
+
     /// 取流: 按音质链路尝试, 命中返回 {"result":100,"data":url,"level":<人话>}
     pub async fn song_url(&self, mid: &str, level: &str, cookie: &str) -> Value {
         if mid.is_empty() {

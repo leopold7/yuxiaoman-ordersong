@@ -258,7 +258,28 @@ export const qqService: MusicService & {
                 return [];
             }
         }
-        // TODO(qq): 自定义 disstid 歌单加载需要额外接口, 暂仅支持 top:<id>
+        // 自定义歌单: disstid 为纯数字 (从 y.qq.com 歌单页 URL 复制)
+        if (/^\d+$/.test(listId.trim())) {
+            try {
+                const { data } = await qqApi.playlist({ disstid: listId.trim() });
+                const list = data.data?.list ?? [];
+                if (list.length === 0 && data.err) {
+                    console.warn("[qq] 自定义歌单为空:", data.err, data.code);
+                }
+                return list.map((s) => ({
+                    platform: "qq" as const,
+                    sid: s.songmid,
+                    sname: s.songname,
+                    sartist: s.singer[0]?.name ?? "",
+                    duration: s.interval,
+                    coverUrl: qqCoverUrl(s.albummid),
+                }));
+            } catch (err) {
+                console.warn("[qq] 取自定义歌单失败:", err);
+                return [];
+            }
+        }
+        console.warn("[qq] 不支持的歌单 ID 格式:", listId);
         return [];
     },
 

@@ -24,6 +24,7 @@ pub fn router() -> Router<AppStateRef> {
         .route("/user/setCookie", post(set_cookie))
         .route("/user/favorite", get(user_favorite))
         .route("/toplist", get(toplist))
+        .route("/playlist", get(playlist))
 }
 
 #[derive(Deserialize)]
@@ -39,6 +40,17 @@ async fn toplist(State(state): State<AppStateRef>, Query(q): Query<ToplistQuery>
             .toplist(q.topid.unwrap_or(4) as i64, q.num.unwrap_or(100) as i64)
             .await,
     )
+}
+
+#[derive(Deserialize)]
+struct PlaylistQuery {
+    disstid: Option<String>,
+}
+
+async fn playlist(State(state): State<AppStateRef>, Query(q): Query<PlaylistQuery>) -> impl IntoResponse {
+    let disstid = q.disstid.and_then(|s| s.trim().parse::<i64>().ok()).unwrap_or(0);
+    let cookie = state.qq_cookie_snapshot();
+    Json(state.qq.playlist(disstid, &cookie).await)
 }
 
 #[derive(Deserialize)]
