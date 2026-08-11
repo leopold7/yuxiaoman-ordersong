@@ -85,6 +85,19 @@ fn run_app() {
     tauri::Builder::default()
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(
+            tauri_plugin_single_instance::Builder::new()
+                .callback(|app, _argv, _cwd| {
+                    // 已有实例在运行时，第二个进程会触发此回调：把主窗口前置并聚焦
+                    if let Some(win) = app.get_webview_window("main") {
+                        let _ = win.unminimize();
+                        let _ = win.show();
+                        let _ = win.set_focus();
+                        write_log("[single-instance] 已有实例在运行，聚焦主窗口");
+                    }
+                })
+                .build(),
+        )
         .invoke_handler(tauri::generate_handler![
             webview_login::open_netease_login,
             webview_login::read_netease_cookies,
