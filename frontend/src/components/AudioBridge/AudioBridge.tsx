@@ -11,7 +11,14 @@ export function AudioBridge() {
     let rafId = 0;
     let pausing = false; // 淡出暂停进行中 (音量渐降但尚未 pause)
 
-    const SEEK_TOLERANCE_SEC = 0.8;
+    // 仅向前追的容差 (秒): 本地进度落后期望超过该值才向前 seek。
+    // 设大一些(5s), 减少无谓 seek; 且绝对禁止往回 seek, 从根上杜绝"重复上一秒"。
+    const FORWARD_TOLERANCE_SEC = 5;
+    // 卡顿感知: 本地 audio.currentTime 停滞超过该时长(ms)判定为系统卡顿,
+    // 此时降级为暂停/静音滞后, 而非基于过期快照回跳。
+    const STALL_MS = 5000;
+    // 本地 currentTime 实际推进的最后时刻 (ms), 用于卡顿停滞判定
+    let lastProgressAt = 0;
 
     function cancelRamp(): void {
         if (rafId) {
@@ -80,6 +87,13 @@ export function AudioBridge() {
         audio.preload = "auto";
         audio.volume = 1;
 
+        // 记录本地真实播放进度推进时刻, 用于卡顿停滞判定 (比依赖快照 t 更可靠,
+        // 能覆盖 OBS 音频进程自身卡顿的场景)
+        const onTimeUpdate = () => {
+            lastProgressAt = performance.now();
+        };
+        audio.addEventListener("timeupdate", onTimeUpdate);
+
         // OBS 浏览器源默认允许自动播放, 但用户在普通浏览器打开预览时需要
         // 一次点击才能解锁. 记录一下并在下次 sync 里补触发 play().
         const unlock = () => {
@@ -90,6 +104,7 @@ export function AudioBridge() {
         window.addEventListener("pointerdown", unlock);
         window.addEventListener("keydown", unlock);
         onCleanup(() => {
+            audio.removeEventListener("timeupdate", onTimeUpdate);
             window.removeEventListener("pointerdown", unlock);
             window.removeEventListener("keydown", unlock);
             cancelRamp();
@@ -110,6 +125,7 @@ export function AudioBridge() {
             if (target) {
                 audio.src = target;
                 audio.currentTime = Math.max(0, smoothCurrentTime());
+                lastProgressAt = performance.now();
                 lastPlaying = s.playing;
                 if (s.playing) startPlay(fadeMs);
             } else {
@@ -133,11 +149,29 @@ export function AudioBridge() {
             startPlay(fadeMs);
         }
 
-        // 4. 追帧 (仅在正常播放、且未在淡出暂停过程中; 否则会把正在淡出的尾音往回 seek 导致重复)
+        // 4. 追帧 + 卡顿感知 (仅在正常播放、且未在淡出暂停过程中)
         if (s.playing && !pausing) {
             const expect = smoothCurrentTime();
-            if (isFinite(expect) && Math.abs(audio.currentTime - expect) > SEEK_TOLERANCE_SEC) {
+            const local = audio.currentTime;
+
+            // 卡顿感知: 本地进度长时间无推进 (系统卡顿导致解码停滞), 但主程序仍
+            // 报告 playing -> 降级为暂停/静音滞后, 绝不基于过期快照回跳 (回跳会
+            // 重复上一秒, 体验最差)。卡顿解除后由单向向前追自然对齐。
+            const stalled = lastProgressAt > 0 && performance.now() - lastProgressAt > STALL_MS;
+            if (stalled) {
+                fadeOutPause(fadeMs); // 静音滞后, 避免重复; 恢复后 startPlay 重新接上
+                return;
+            }
+
+            if (!isFinite(expect)) return;
+
+            // 单向向前追: 仅当期望进度明显领先本地时才向前 seek;
+            // 期望落后于本地 (快照过期/回退) 时一律不回跳, 保留本地已播放位置,
+            // 从根上杜绝"重复上一秒内容"。
+            const diff = expect - local;
+            if (diff > FORWARD_TOLERANCE_SEC) {
                 audio.currentTime = expect;
+                lastProgressAt = performance.now(); // 主动 seek 后刷新停滞基准, 避免误判
             }
         }
     });
