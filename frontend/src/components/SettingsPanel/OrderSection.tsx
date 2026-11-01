@@ -1,7 +1,7 @@
 import { For, Show, createSignal } from "solid-js";
 import { settings, type IdleSource } from "@/stores/settings";
 import { session } from "@/stores/session";
-import { loadIdleSongList, loadIdleByCurrentSource } from "@/services/PlayerService";
+import { loadIdleSongList, loadIdleByCurrentSource, reorderIdleByShuffle } from "@/services/PlayerService";
 import styles from "./SettingsPanel.module.css";
 import type { Platform } from "@/types";
 
@@ -66,6 +66,27 @@ export function OrderSection() {
                         <option value="popular">热门歌曲</option>
                     </select>
                     <button onClick={() => loadIdleByCurrentSource()} title="按当前平台 + 来源立即刷新空闲歌单">刷新</button>
+                </div>
+
+                <div class={styles.row}>
+                    <label>歌单随机播放</label>
+                    <input
+                        type="checkbox"
+                        checked={settings.idleShuffle()}
+                        onChange={(e) => {
+                            settings.setIdleShuffle(e.currentTarget.checked);
+                            // 立即按新策略重排已加载的歌单, 不打断正在播放的歌曲
+                            reorderIdleByShuffle();
+                        }}
+                    />
+                    <span />
+                </div>
+                <div class={styles.row}>
+                    <label />
+                    <div style={{ "font-size": "12px", color: "var(--text-2)", "line-height": "1.6" }}>
+                        关闭时按歌单原始顺序 1→N 循环；开启后随机打乱。点播插队结束后会从被打断位置的下一首继续。
+                    </div>
+                    <span />
                 </div>
 
                 <Show when={settings.idleSource() === "playlist"}>

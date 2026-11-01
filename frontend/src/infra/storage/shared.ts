@@ -33,6 +33,7 @@ export const SHARED_KEYS: readonly string[] = [
     "v3.songListId",
     "v3.songListHistory",
     "v3.idleSource",
+    "v3.idleShuffle",
     "v3.userMaxOrder",
     "v3.globalMaxOrder",
     "v3.orderMaxDuration",

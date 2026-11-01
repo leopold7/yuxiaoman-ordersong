@@ -32,6 +32,12 @@ const urlPrefetchCache = new Map<string, string>();
 let isSwitching = false;
 let pendingNext = false;
 
+/**
+ * 空闲歌单的原始顺序基线 (未打乱).
+ * 关闭「歌单随机播放」时用它还原接口返回的 1→N 顺序.
+ */
+let idleOrigin: OrderItem[] = [];
+
 function shuffle<T>(arr: T[]): T[] {
     const a = arr.slice();
     for (let i = a.length - 1; i > 0; i--) {
@@ -227,12 +233,14 @@ export async function playNext(): Promise<void> {
         flushPending();
         return;
     }
+    // 断点续播: 点播曲播放期间不推进 idleIdx, 这里恒从「刚播完的那首」的下一位继续
     let next = idleIdx() + 1;
     if (next >= idle.length) {
-        const reshuffled = shuffle(idle);
-        setIdleList(reshuffled);
+        // 一轮播完: 随机模式重新洗牌, 正序模式原样回到第 1 首 (不重排, 保证顺序稳定)
+        if (settings.idleShuffle()) setIdleList(shuffle(idle));
         next = 0;
     }
+    next = Math.max(0, Math.min(next, idle.length - 1));
     setIdleIdx(next);
     const idleSong = idleList()[next];
     queue.insertAt(idleSong, 0);
@@ -256,20 +264,68 @@ export function togglePlayback(): void {
     audioPlayer.toggle(fadeMs);
 }
 
+/** 把平台歌单转换成空闲队列条目, 顺序完全沿用接口返回顺序. */
+function buildIdleItems(songs: SongInfo[]): OrderItem[] {
+    return songs.map((song) => ({
+        id: `idle_${song.sid}`,
+        uid: 0,
+        uname: "空闲歌单",
+        song,
+        source: "idle" as const,
+        priority: -100,
+        addedAt: Date.now(),
+    }));
+}
+
+/** 装载空闲歌单: 保留原始顺序基线, 再按「歌单随机播放」开关决定是否打乱. */
 function applyIdleList(songs: SongInfo[]): void {
-    const list: OrderItem[] = shuffle(
-        songs.map((song) => ({
-            id: `idle_${song.sid}`,
-            uid: 0,
-            uname: "空闲歌单",
-            song,
-            source: "idle" as const,
-            priority: -100,
-            addedAt: Date.now(),
-        }))
-    );
-    setIdleList(list);
+    const base = buildIdleItems(songs);
+    idleOrigin = base;
+    setIdleList(settings.idleShuffle() ? shuffle(base) : base.slice());
     setIdleIdx(-1);
+}
+
+/**
+ * 定位当前播放进度对应的空闲曲 id (断点续播锚点).
+ * 正在播空闲曲时取队首, 正在播点播曲时回落到「最后播过的空闲曲」.
+ */
+function idleAnchorId(): string | null {
+    const head = queue.orderList()[0];
+    if (head && head.source === "idle") return head.id;
+    const cur = idleList();
+    const idx = Math.min(idleIdx(), cur.length - 1);
+    return idx >= 0 ? (cur[idx]?.id ?? null) : null;
+}
+
+/**
+ * 「歌单随机播放」开关切换时即时重排已加载的空闲歌单, 不打断当前播放:
+ * - 关闭随机: 回到接口原始顺序, 并把游标对齐到当前/最后播放的那首, 下一首继续往后;
+ * - 开启随机: 保留已播前缀, 只打乱剩余部分, 本轮不会重复播放.
+ */
+export function reorderIdleByShuffle(): void {
+    const cur = idleList();
+    if (!cur.length) return;
+    if (!idleOrigin.length) idleOrigin = cur.slice();
+
+    // 已播数量 (含正在播放的那首), 用作无法按 id 定位时的兜底进度
+    const playedCount = Math.max(0, Math.min(idleIdx() + 1, cur.length));
+
+    if (settings.idleShuffle()) {
+        const head = cur.slice(0, playedCount);
+        const rest = cur.slice(playedCount);
+        setIdleList([...head, ...shuffle(rest)]);
+        return;
+    }
+
+    const nextList = idleOrigin.slice();
+    const anchor = idleAnchorId();
+    let pos = anchor ? nextList.findIndex((x) => x.id === anchor) : -1;
+    if (pos < 0) {
+        // 找不到锚点 (如正在播点播曲): 按已播数量对齐, 既不重放也不跳过
+        pos = playedCount - 1;
+    }
+    setIdleList(nextList);
+    setIdleIdx(pos);
 }
 
 /** 按 listId 加载空闲歌单 */

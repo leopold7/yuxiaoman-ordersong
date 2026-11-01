@@ -25,6 +25,8 @@ const K = {
     songListHistory: "v3.songListHistory",
     /** 队列播完后默认补歌来源: playlist / favorite / popular */
     idleSource: "v3.idleSource",
+    /** 空闲歌单是否随机播放, 默认关 (按歌单原始正序 1→N 循环) */
+    idleShuffle: "v3.idleShuffle",
     userMaxOrder: "v3.userMaxOrder",
     globalMaxOrder: "v3.globalMaxOrder",
     orderMaxDuration: "v3.orderMaxDuration",
@@ -81,6 +83,7 @@ const [audioQuality, setAudioQuality] = createSignal<string>(loadJSON(K.audioQua
 const [songListId, setSongListId] = createSignal<string>(loadJSON(K.songListId, "7294328248"));
 const [songListHistory, setSongListHistory] = createSignal<SongListHistoryItem[]>(loadJSON(K.songListHistory, []));
 const [idleSource, setIdleSource] = createSignal<IdleSource>(loadJSON(K.idleSource, "playlist") as IdleSource);
+const [idleShuffle, setIdleShuffle] = createSignal<boolean>(loadJSON(K.idleShuffle, false));
 
 const [userMaxOrder, setUserMaxOrder] = createSignal<number>(loadJSON(K.userMaxOrder, 3));
 const [globalMaxOrder, setGlobalMaxOrder] = createSignal<number>(loadJSON(K.globalMaxOrder, 15));
@@ -119,6 +122,7 @@ createEffect(() => saveJSON(K.audioQuality, audioQuality()));
 createEffect(() => saveJSON(K.songListId, songListId()));
 createEffect(() => saveJSON(K.songListHistory, songListHistory()));
 createEffect(() => saveJSON(K.idleSource, idleSource()));
+createEffect(() => saveJSON(K.idleShuffle, idleShuffle()));
 createEffect(() => saveJSON(K.userMaxOrder, userMaxOrder()));
 createEffect(() => saveJSON(K.globalMaxOrder, globalMaxOrder()));
 createEffect(() => saveJSON(K.orderMaxDuration, orderMaxDuration()));
@@ -152,6 +156,7 @@ export const settings = {
     songListId, setSongListId,
     songListHistory, setSongListHistory,
     idleSource, setIdleSource,
+    idleShuffle, setIdleShuffle,
     userMaxOrder, setUserMaxOrder,
     globalMaxOrder, setGlobalMaxOrder,
     orderMaxDuration, setOrderMaxDuration,
@@ -190,6 +195,7 @@ export function reloadSettingsFromStorage(): void {
     setSongListId(loadJSON(K.songListId, "7294328248"));
     setSongListHistory(loadJSON(K.songListHistory, []));
     setIdleSource(loadJSON(K.idleSource, "playlist") as IdleSource);
+    setIdleShuffle(loadJSON(K.idleShuffle, false));
     setUserMaxOrder(loadJSON(K.userMaxOrder, 3));
     setGlobalMaxOrder(loadJSON(K.globalMaxOrder, 15));
     setOrderMaxDuration(loadJSON(K.orderMaxDuration, 0));
